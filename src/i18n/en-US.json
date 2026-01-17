@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "Rise of the Spellbinder",
+    "description": "A mage-themed idle game"
+  },
+  "common": {
+    "language": "Language",
+    "save": "Save",
+    "load": "Load",
+    "export": "Export",
+    "import": "Import",
+    "pause": "Pause",
+    "resume": "Resume",
+    "time": "Time"
+  },
+  "menu": {
+    "overview": "Overview",
+    "resources": "Resources",
+    "magic": "Magic",
+    "research": "Research",
+    "settings": "Settings"
+  }
+}

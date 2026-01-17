@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "咒术师崛起",
+    "description": "法师主题放置类游戏"
+  },
+  "common": {
+    "language": "语言",
+    "save": "保存",
+    "load": "读取",
+    "export": "导出",
+    "import": "导入",
+    "pause": "暂停",
+    "resume": "继续",
+    "time": "时间"
+  },
+  "menu": {
+    "overview": "总览",
+    "resources": "资源",
+    "magic": "魔法",
+    "research": "研究",
+    "settings": "设置"
+  }
+}

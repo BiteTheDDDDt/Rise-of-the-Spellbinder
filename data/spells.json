@@ -1,0 +1,457 @@
+{
+  "spells": [
+    {
+      "id": "spark",
+      "name": "火花",
+      "description": "发射一个小火花，造成轻微的火焰伤害。",
+      "element": "fire",
+      "level": 1,
+      "manaCost": 5,
+      "cooldown": 2,
+      "castTime": 1,
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 10,
+          "element": "fire"
+        }
+      ]
+    },
+    {
+      "id": "fireball",
+      "name": "火球术",
+      "description": "发射一个火球，造成中等火焰伤害。",
+      "element": "fire",
+      "level": 3,
+      "manaCost": 15,
+      "cooldown": 5,
+      "castTime": 2,
+      "unlockCondition": "fire >= 30",
+      "requiredSkill": {
+        "skillId": "fire_affinity",
+        "level": 10
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 30,
+          "element": "fire"
+        }
+      ]
+    },
+    {
+      "id": "flame_wave",
+      "name": "火焰波浪",
+      "description": "向前方释放一道火焰波浪，对多个敌人造成伤害。",
+      "element": "fire",
+      "level": 5,
+      "manaCost": 25,
+      "cooldown": 8,
+      "castTime": 3,
+      "unlockCondition": "fire >= 50",
+      "requiredSkill": {
+        "skillId": "fire_mastery",
+        "level": 20
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "area",
+          "value": 20,
+          "element": "fire"
+        }
+      ]
+    },
+    {
+      "id": "fire_storm",
+      "name": "火焰风暴",
+      "description": "召唤一场火焰风暴，对大范围敌人造成持续伤害。",
+      "element": "fire",
+      "level": 8,
+      "manaCost": 40,
+      "cooldown": 15,
+      "castTime": 5,
+      "unlockCondition": "fire >= 70",
+      "requiredSkill": {
+        "skillId": "fire_mastery",
+        "level": 40
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "area",
+          "value": 15,
+          "element": "fire",
+          "duration": 10
+        }
+      ]
+    },
+    {
+      "id": "fire_shield",
+      "name": "火焰护盾",
+      "description": "用火焰包裹自己，提高防御并对近战攻击者造成伤害。",
+      "element": "fire",
+      "level": 4,
+      "manaCost": 20,
+      "cooldown": 10,
+      "castTime": 3,
+      "unlockCondition": "fire >= 40",
+      "requiredSkill": {
+        "skillId": "fire_resistance",
+        "level": 15
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "self",
+          "value": 10,
+          "element": "fire",
+          "duration": 30
+        }
+      ]
+    },
+    {
+      "id": "splash",
+      "name": "水溅",
+      "description": "喷射一小股水流，造成轻微的水系伤害。",
+      "element": "water",
+      "level": 1,
+      "manaCost": 5,
+      "cooldown": 2,
+      "castTime": 1,
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 8,
+          "element": "water"
+        }
+      ]
+    },
+    {
+      "id": "water_bolt",
+      "name": "水箭术",
+      "description": "发射一枚水箭，造成中等水系伤害。",
+      "element": "water",
+      "level": 3,
+      "manaCost": 15,
+      "cooldown": 5,
+      "castTime": 2,
+      "unlockCondition": "water >= 30",
+      "requiredSkill": {
+        "skillId": "water_affinity",
+        "level": 10
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 25,
+          "element": "water"
+        }
+      ]
+    },
+    {
+      "id": "healing_wave",
+      "name": "治疗波浪",
+      "description": "释放一道治疗波浪，恢复自身或盟友的生命值。",
+      "element": "water",
+      "level": 4,
+      "manaCost": 20,
+      "cooldown": 6,
+      "castTime": 2,
+      "unlockCondition": "water >= 35",
+      "requiredSkill": {
+        "skillId": "water_mastery",
+        "level": 15
+      },
+      "effects": [
+        {
+          "type": "heal",
+          "target": "ally",
+          "value": 30,
+          "element": "water"
+        }
+      ]
+    },
+    {
+      "id": "tidal_wave",
+      "name": "潮汐波浪",
+      "description": "召唤一道巨大的潮汐波浪，对前方敌人造成大量伤害。",
+      "element": "water",
+      "level": 7,
+      "manaCost": 35,
+      "cooldown": 12,
+      "castTime": 4,
+      "unlockCondition": "water >= 60",
+      "requiredSkill": {
+        "skillId": "water_mastery",
+        "level": 30
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "area",
+          "value": 35,
+          "element": "water"
+        }
+      ]
+    },
+    {
+      "id": "purify",
+      "name": "净化",
+      "description": "清除负面状态效果。",
+      "element": "water",
+      "level": 5,
+      "manaCost": 25,
+      "cooldown": 8,
+      "castTime": 3,
+      "unlockCondition": "water >= 45",
+      "requiredSkill": {
+        "skillId": "water_flow",
+        "level": 20
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "ally",
+          "value": 1,
+          "duration": 1
+        }
+      ]
+    },
+    {
+      "id": "pebble",
+      "name": "飞石",
+      "description": "投掷一颗小石头，造成轻微的土系伤害。",
+      "element": "earth",
+      "level": 1,
+      "manaCost": 5,
+      "cooldown": 2,
+      "castTime": 1,
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 12,
+          "element": "earth"
+        }
+      ]
+    },
+    {
+      "id": "rock_throw",
+      "name": "投石术",
+      "description": "投掷一块大石头，造成中等土系伤害。",
+      "element": "earth",
+      "level": 3,
+      "manaCost": 15,
+      "cooldown": 5,
+      "castTime": 2,
+      "unlockCondition": "earth >= 30",
+      "requiredSkill": {
+        "skillId": "earth_affinity",
+        "level": 10
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 35,
+          "element": "earth"
+        }
+      ]
+    },
+    {
+      "id": "earth_wall",
+      "name": "土墙",
+      "description": "召唤一道土墙，提供防御保护。",
+      "element": "earth",
+      "level": 4,
+      "manaCost": 20,
+      "cooldown": 10,
+      "castTime": 3,
+      "unlockCondition": "earth >= 40",
+      "requiredSkill": {
+        "skillId": "earth_mastery",
+        "level": 15
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "self",
+          "value": 20,
+          "element": "earth",
+          "duration": 30
+        }
+      ]
+    },
+    {
+      "id": "earthquake",
+      "name": "地震术",
+      "description": "引发小范围地震，对周围敌人造成伤害并减速。",
+      "element": "earth",
+      "level": 6,
+      "manaCost": 30,
+      "cooldown": 10,
+      "castTime": 4,
+      "unlockCondition": "earth >= 55",
+      "requiredSkill": {
+        "skillId": "earth_mastery",
+        "level": 25
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "area",
+          "value": 25,
+          "element": "earth"
+        },
+        {
+          "type": "debuff",
+          "target": "enemy",
+          "value": 5,
+          "duration": 10
+        }
+      ]
+    },
+    {
+      "id": "stone_armor",
+      "name": "石肤术",
+      "description": "用岩石覆盖身体，大幅提高防御力。",
+      "element": "earth",
+      "level": 5,
+      "manaCost": 25,
+      "cooldown": 15,
+      "castTime": 5,
+      "unlockCondition": "earth >= 50",
+      "requiredSkill": {
+        "skillId": "stone_skin",
+        "level": 20
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "self",
+          "value": 50,
+          "element": "earth",
+          "duration": 45
+        }
+      ]
+    },
+    {
+      "id": "gust",
+      "name": "阵风",
+      "description": "释放一阵强风，造成轻微的风系伤害。",
+      "element": "wind",
+      "level": 1,
+      "manaCost": 5,
+      "cooldown": 2,
+      "castTime": 1,
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 8,
+          "element": "wind"
+        }
+      ]
+    },
+    {
+      "id": "wind_cutter",
+      "name": "风刃",
+      "description": "发射一道锋利的风刃，造成中等风系伤害。",
+      "element": "wind",
+      "level": 3,
+      "manaCost": 15,
+      "cooldown": 4,
+      "castTime": 1.5,
+      "unlockCondition": "wind >= 30",
+      "requiredSkill": {
+        "skillId": "wind_affinity",
+        "level": 10
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "enemy",
+          "value": 28,
+          "element": "wind"
+        }
+      ]
+    },
+    {
+      "id": "speed_burst",
+      "name": "疾风步",
+      "description": "暂时大幅提高移动和攻击速度。",
+      "element": "wind",
+      "level": 4,
+      "manaCost": 20,
+      "cooldown": 8,
+      "castTime": 2,
+      "unlockCondition": "wind >= 40",
+      "requiredSkill": {
+        "skillId": "wind_mastery",
+        "level": 15
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "self",
+          "value": 30,
+          "element": "wind",
+          "duration": 20
+        }
+      ]
+    },
+    {
+      "id": "tornado",
+      "name": "龙卷风",
+      "description": "召唤一个小型龙卷风，对路径上的敌人造成持续伤害。",
+      "element": "wind",
+      "level": 7,
+      "manaCost": 35,
+      "cooldown": 12,
+      "castTime": 4,
+      "unlockCondition": "wind >= 65",
+      "requiredSkill": {
+        "skillId": "wind_mastery",
+        "level": 35
+      },
+      "effects": [
+        {
+          "type": "damage",
+          "target": "area",
+          "value": 20,
+          "element": "wind",
+          "duration": 8
+        }
+      ]
+    },
+    {
+      "id": "wind_shield",
+      "name": "风之护盾",
+      "description": "用旋转的风墙保护自己，提高回避率。",
+      "element": "wind",
+      "level": 5,
+      "manaCost": 25,
+      "cooldown": 10,
+      "castTime": 3,
+      "unlockCondition": "wind >= 50",
+      "requiredSkill": {
+        "skillId": "quick_casting",
+        "level": 20
+      },
+      "effects": [
+        {
+          "type": "buff",
+          "target": "self",
+          "value": 25,
+          "element": "wind",
+          "duration": 25
+        }
+      ]
+    }
+  ]
+}

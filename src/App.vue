@@ -2,9 +2,12 @@
 import { useI18n } from 'vue-i18n'
 import { useGame } from './core/useGame'
 import { saveSystem } from './core'
-import { ref } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import ResourceBar from './ui/components/ResourceBar.vue'
 import Activities from './ui/sections/Activities.vue'
+import Skills from './ui/sections/Skills.vue'
+import Spells from './ui/sections/Spells.vue'
+import { setLocale } from './i18n'
 
 const { t, locale } = useI18n()
 const game = useGame()
@@ -14,15 +17,35 @@ const languages = [
   { code: 'zh-CN', label: '中文' }
 ]
 
+watch(locale, (newLocale) => {
+  const startTime = performance.now()
+  console.log(`[Locale] Switching to ${newLocale} at ${startTime}`)
+  
+  try {
+    setLocale(newLocale as 'en-US' | 'zh-CN')
+    const endTime = performance.now()
+    console.log(`[Locale] Immediate switch completed in ${endTime - startTime}ms`)
+  } catch (error) {
+    console.error('[Locale] Failed to set locale:', error)
+  }
+})
+
 const activeMenu = ref('overview')
-const menuItems = [
-  { id: 'overview', icon: '📊', label: t('menu.overview') },
-  { id: 'resources', icon: '💰', label: t('menu.resources') },
-  { id: 'activities', icon: '📋', label: '活动' },
-  { id: 'magic', icon: '✨', label: t('menu.magic') },
-  { id: 'research', icon: '🔬', label: t('menu.research') },
-  { id: 'settings', icon: '⚙️', label: t('menu.settings') }
-]
+const magicSubMenu = ref('skills')
+const menuItems = ref<Array<{id: string, icon: string, label: string}>>([])
+
+const updateMenuItems = () => {
+  menuItems.value = [
+    { id: 'overview', icon: '📊', label: t('menu.overview') },
+    { id: 'resources', icon: '💰', label: t('menu.resources') },
+    { id: 'activities', icon: '📋', label: '活动' },
+    { id: 'magic', icon: '✨', label: t('menu.magic') },
+    { id: 'research', icon: '🔬', label: t('menu.research') },
+    { id: 'settings', icon: '⚙️', label: t('menu.settings') }
+  ]
+}
+
+watchEffect(updateMenuItems)
 
 function handleSave() {
   saveSystem.saveToLocalStorage()
@@ -150,8 +173,29 @@ function handleImport(event: Event) {
             <Activities />
           </div>
           <div v-else-if="activeMenu === 'magic'" class="magic">
-            <h3>✨ Magic</h3>
-            <p>Magic system will be implemented in Phase 2.</p>
+            <div class="magic-header">
+              <h3>✨ 魔法系统</h3>
+              <div class="magic-tabs">
+                <button 
+                  @click="magicSubMenu = 'skills'" 
+                  :class="{ active: magicSubMenu === 'skills' }"
+                  class="tab-btn"
+                >
+                  🎯 技能
+                </button>
+                <button 
+                  @click="magicSubMenu = 'spells'" 
+                  :class="{ active: magicSubMenu === 'spells' }"
+                  class="tab-btn"
+                >
+                  ✨ 法术
+                </button>
+              </div>
+            </div>
+            <div class="magic-content">
+              <Skills v-if="magicSubMenu === 'skills'" />
+              <Spells v-if="magicSubMenu === 'spells'" />
+            </div>
           </div>
           <div v-else-if="activeMenu === 'research'" class="research">
             <h3>🔬 Research</h3>
@@ -373,6 +417,46 @@ function handleImport(event: Event) {
   font-size: 1.2rem;
   font-weight: bold;
   color: #e0e0e0;
+}
+
+.magic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+
+.magic-tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-btn {
+  background: #252525;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #333;
+  color: #e0e0e0;
+}
+
+.tab-btn.active {
+  background: #3700b3;
+  color: white;
+  border-color: #6200ee;
+}
+
+.magic-content {
+  margin-top: 20px;
 }
 
 .footer {

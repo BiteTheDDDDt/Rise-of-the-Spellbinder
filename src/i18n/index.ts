@@ -17,8 +17,21 @@ export const i18n = createI18n({
 })
 
 export function setLocale(locale: Locale) {
+  const start = performance.now()
   i18n.global.locale.value = locale
-  localStorage.setItem('locale', locale)
+  const mid = performance.now()
+  // 延迟 localStorage 操作以避免阻塞主线程
+  setTimeout(() => {
+    try {
+      localStorage.setItem('locale', locale)
+      const end = performance.now()
+      console.log(`[setLocale] localStorage saved in ${end - mid}ms (deferred)`)
+    } catch (error) {
+      console.error('[setLocale] Failed to save locale to localStorage:', error)
+    }
+  }, 0)
+  const immediateEnd = performance.now()
+  console.log(`[setLocale] Immediate update took ${immediateEnd - start}ms`)
 }
 
 export function getLocale(): Locale {

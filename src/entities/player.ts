@@ -1,6 +1,8 @@
 import { reactive } from 'vue'
 import { Talent } from '../systems/talent'
 import { ResourceManager, type ResourceId } from '../systems/resource'
+import { SkillManager } from '../systems/skill'
+import { SpellManager } from '../systems/spell'
 
 export interface PlayerData {
   name: string
@@ -8,6 +10,8 @@ export interface PlayerData {
   experience: number
   talent: Talent
   resourceManager: ResourceManager
+  skillManager: SkillManager
+  spellManager: SpellManager
 }
 
 export class Player {
@@ -16,13 +20,17 @@ export class Player {
   constructor(name: string, talentPreset?: 'fire' | 'water' | 'earth' | 'wind') {
     const talent = talentPreset ? Talent.createPreset(talentPreset) : new Talent()
     const resourceManager = ResourceManager.createDefault()
+    const skillManager = new SkillManager()
+    const spellManager = new SpellManager()
     
     this.data = reactive({
       name,
       level: 1,
       experience: 0,
       talent,
-      resourceManager
+      resourceManager,
+      skillManager,
+      spellManager
     })
 
     this.applyTalentBonuses()
@@ -69,6 +77,14 @@ export class Player {
     return this.data.resourceManager
   }
 
+  get skillManager(): SkillManager {
+    return this.data.skillManager
+  }
+
+  get spellManager(): SpellManager {
+    return this.data.spellManager
+  }
+
   addExperience(amount: number) {
     this.data.experience += amount
     const required = this.getExperienceRequiredForNextLevel()
@@ -89,6 +105,7 @@ export class Player {
 
   update(deltaSeconds: number) {
     this.data.resourceManager.update(deltaSeconds)
+    this.data.spellManager.update(deltaSeconds)
   }
 
   toJSON() {
@@ -97,16 +114,27 @@ export class Player {
       level: this.data.level,
       experience: this.data.experience,
       talent: this.data.talent.toJSON(),
-      resources: this.data.resourceManager.toJSON()
+      resources: this.data.resourceManager.toJSON(),
+      skills: this.data.skillManager.toJSON(),
+      spells: this.data.spellManager.toJSON()
     }
   }
 
-  static fromJSON(data: any): Player {
+  static fromJSON(data: any, skillDefinitions?: any[], spellDefinitions?: any[]): Player {
     const player = new Player(data.name)
     player.data.level = data.level || 1
     player.data.experience = data.experience || 0
     player.data.talent = Talent.fromJSON(data.talent || {})
     player.data.resourceManager = ResourceManager.fromJSON(data.resources || {})
+    
+    if (data.skills && skillDefinitions) {
+      player.data.skillManager = SkillManager.fromJSON(data.skills, skillDefinitions)
+    }
+    
+    if (data.spells && spellDefinitions) {
+      player.data.spellManager = SpellManager.fromJSON(data.spells, spellDefinitions)
+    }
+    
     player.applyTalentBonuses()
     return player
   }

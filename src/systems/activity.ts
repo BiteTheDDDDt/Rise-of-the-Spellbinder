@@ -2,9 +2,14 @@ import { reactive } from 'vue'
 import type { ResourceId } from './resource'
 
 export interface ActivityReward {
-  resource: ResourceId
+  resource: ResourceId | 'experience' | 'skill_exp'
   amount: number
   randomRange?: [number, number]
+}
+
+export interface ActivityCost {
+  resource: string
+  amount: number
 }
 
 export interface ActivityData {
@@ -13,7 +18,14 @@ export interface ActivityData {
   description: string
   duration: number
   rewards: ActivityReward[]
+  costs?: ActivityCost[]
   category?: string
+  type?: 'standard' | 'learning' | 'practice' | 'training'
+  metadata?: {
+    spellId?: string
+    skillId?: string
+    element?: string
+  }
 }
 
 export interface ActivityInstance {
@@ -24,9 +36,16 @@ export interface ActivityInstance {
   isCompleted: boolean
 }
 
+export type ActivityCompleteCallback = (instance: ActivityInstance) => void
+
 export class ActivityRunner {
   currentActivity: ActivityInstance | null = null
   queue: ActivityInstance[] = reactive([])
+  onCompleteCallbacks: ActivityCompleteCallback[] = []
+
+  constructor() {
+    this.onCompleteCallbacks = []
+  }
 
   startActivity(activity: ActivityData) {
     if (this.currentActivity) {
@@ -69,6 +88,11 @@ export class ActivityRunner {
 
   completeActivity(instance: ActivityInstance) {
     console.log(`Activity ${instance.activity.name} completed`)
+    
+    for (const callback of this.onCompleteCallbacks) {
+      callback(instance)
+    }
+    
     this.currentActivity = null
     if (this.queue.length > 0) {
       this.currentActivity = this.queue.shift()!
@@ -83,6 +107,17 @@ export class ActivityRunner {
 
   clearQueue() {
     this.queue = []
+  }
+
+  addCompleteCallback(callback: ActivityCompleteCallback) {
+    this.onCompleteCallbacks.push(callback)
+  }
+
+  removeCompleteCallback(callback: ActivityCompleteCallback) {
+    const index = this.onCompleteCallbacks.indexOf(callback)
+    if (index > -1) {
+      this.onCompleteCallbacks.splice(index, 1)
+    }
   }
 
   getProgress(): number {

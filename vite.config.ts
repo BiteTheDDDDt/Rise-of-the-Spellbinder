@@ -4,6 +4,7 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/Rise-of-the-Spellbinder/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {

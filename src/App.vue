@@ -3,6 +3,8 @@ import { useI18n } from 'vue-i18n'
 import { useGame } from './core/useGame'
 import { saveSystem } from './core'
 import { ref } from 'vue'
+import ResourceBar from './ui/components/ResourceBar.vue'
+import Activities from './ui/sections/Activities.vue'
 
 const { t, locale } = useI18n()
 const game = useGame()
@@ -16,6 +18,7 @@ const activeMenu = ref('overview')
 const menuItems = [
   { id: 'overview', icon: '📊', label: t('menu.overview') },
   { id: 'resources', icon: '💰', label: t('menu.resources') },
+  { id: 'activities', icon: '📋', label: '活动' },
   { id: 'magic', icon: '✨', label: t('menu.magic') },
   { id: 'research', icon: '🔬', label: t('menu.research') },
   { id: 'settings', icon: '⚙️', label: t('menu.settings') }
@@ -49,7 +52,7 @@ function handleImport(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files?.length) return
 
-  const file = input.files[0]
+  const file = input.files![0] as File
   const reader = new FileReader()
   reader.onload = (e) => {
     const result = e.target?.result as string
@@ -71,7 +74,7 @@ function handleImport(event: Event) {
       <div class="top-left">
         <h1 class="game-title">🧙 {{ t('app.title') }}</h1>
         <div class="game-time">
-          ⏱️ {{ Math.floor(game.gameTime) }}s
+          ⏱️ {{ Math.floor(game.gameTime.value) }}s
           <button @click="game.togglePause" class="pause-btn">
             {{ game.isPaused ? '▶️' : '⏸️' }}
           </button>
@@ -94,6 +97,9 @@ function handleImport(event: Event) {
         </div>
       </div>
     </header>
+
+    <!-- Resource Bar -->
+    <ResourceBar />
 
     <!-- Main Content -->
     <div class="main-content">
@@ -124,7 +130,7 @@ function handleImport(event: Event) {
             <div class="stats">
               <div class="stat">
                 <div class="stat-label">Game Time</div>
-                <div class="stat-value">{{ Math.floor(game.gameTime) }} seconds</div>
+                <div class="stat-value">{{ Math.floor(game.gameTime.value) }} seconds</div>
               </div>
               <div class="stat">
                 <div class="stat-label">Status</div>
@@ -139,6 +145,9 @@ function handleImport(event: Event) {
           <div v-else-if="activeMenu === 'resources'" class="resources">
             <h3>💰 Resources</h3>
             <p>Resource management will be implemented in Phase 2.</p>
+          </div>
+          <div v-else-if="activeMenu === 'activities'" class="activities">
+            <Activities />
           </div>
           <div v-else-if="activeMenu === 'magic'" class="magic">
             <h3>✨ Magic</h3>

@@ -8,6 +8,8 @@ export interface GameLoopEvents {
   pause: () => void
   resume: () => void
   update: () => void
+  save: () => void
+  load: () => void
 }
 
 export class GameLoop extends EventEmitter<GameLoopEvents> {

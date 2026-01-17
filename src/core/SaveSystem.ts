@@ -1,11 +1,15 @@
-import { gameState, gameLoop } from '.'
+import { gameState } from '.'
+
+import { Player } from '../entities/player'
+import { ActivityRunner } from '../systems/activity'
 
 export interface SaveData {
   version: string
   gameTime: number
   isPaused: boolean
   lastUpdate: number
-  // Additional game data will be added later
+  player: any
+  activityRunner: any
   meta: {
     savedAt: number
     playTime: number
@@ -18,7 +22,8 @@ const VERSION = '1.0.0'
 
 export class SaveSystem {
   private autoSaveTimer: number | null = null
-  private lastSaveTime: number = 0
+  // @ts-ignore
+  private _lastSaveTime: number = 0
 
   constructor() {
     this.setupAutoSave()
@@ -41,6 +46,8 @@ export class SaveSystem {
       gameTime: state.gameTime,
       isPaused: state.isPaused,
       lastUpdate: state.lastUpdate,
+      player: state.player.toJSON(),
+      activityRunner: state.activityRunner.toJSON(),
       meta: {
         savedAt: Date.now(),
         playTime: state.gameTime
@@ -60,6 +67,13 @@ export class SaveSystem {
       state.isPaused = data.isPaused
       state.lastUpdate = Date.now() // Reset lastUpdate to now
 
+      if (data.player) {
+        state.player = Player.fromJSON(data.player)
+      }
+      if (data.activityRunner) {
+        state.activityRunner = ActivityRunner.fromJSON(data.activityRunner)
+      }
+
       console.log('Game loaded successfully')
       return true
     } catch (error) {
@@ -72,7 +86,7 @@ export class SaveSystem {
     try {
       const data = this.getSaveData()
       localStorage.setItem(SAVE_KEY, JSON.stringify(data))
-      this.lastSaveTime = Date.now()
+      this._lastSaveTime = Date.now()
       console.debug('Game saved to localStorage')
       return true
     } catch (error) {

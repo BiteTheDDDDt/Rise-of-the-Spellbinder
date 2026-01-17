@@ -5,6 +5,9 @@ export function useGame() {
   const state = gameState.data
   const isPaused = computed(() => state.isPaused)
   const gameTime = computed(() => state.gameTime)
+  const player = computed(() => state.player)
+  const activityRunner = computed(() => state.activityRunner)
+  const resourceManager = computed(() => state.player.resourceManager)
 
   const togglePause = () => gameLoop.togglePause()
   const save = () => gameLoop.emit('save')
@@ -15,6 +18,9 @@ export function useGame() {
     state,
     isPaused,
     gameTime,
+    player,
+    activityRunner,
+    resourceManager,
 
     // Actions
     togglePause,

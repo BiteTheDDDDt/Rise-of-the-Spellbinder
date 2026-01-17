@@ -1,6 +1,7 @@
 import { GameState } from './GameState'
 import { GameLoop } from './GameLoop'
 import { saveSystem, SaveSystem } from './SaveSystem'
+import { logSystem } from '../systems/log'
 
 // Create game state instance
 export const gameState = new GameState()
@@ -29,8 +30,25 @@ if (import.meta.env.DEV) {
   gameLoop.on('tick', (delta) => {
     console.debug(`Tick: ${delta.toFixed(3)}s`)
   })
-  gameLoop.on('pause', () => console.debug('Game paused'))
-  gameLoop.on('resume', () => console.debug('Game resumed'))
-  gameLoop.on('save', () => console.debug('Save requested'))
-  gameLoop.on('load', () => console.debug('Load requested'))
 }
+
+// Log game events
+gameLoop.on('pause', () => {
+  logSystem.info('游戏已暂停')
+  if (import.meta.env.DEV) console.debug('Game paused')
+})
+
+gameLoop.on('resume', () => {
+  logSystem.info('游戏已恢复')
+  if (import.meta.env.DEV) console.debug('Game resumed')
+})
+
+gameLoop.on('save', () => {
+  logSystem.success('游戏已保存')
+  if (import.meta.env.DEV) console.debug('Save requested')
+})
+
+gameLoop.on('load', () => {
+  logSystem.info('游戏已加载')
+  if (import.meta.env.DEV) console.debug('Load requested')
+})

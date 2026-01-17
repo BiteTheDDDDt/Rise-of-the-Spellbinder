@@ -1,6 +1,8 @@
 import { reactive } from 'vue'
 import type { Element } from './talent'
 import type { SkillId } from './skill'
+import { logSystem } from './log'
+import type { AchievementManager } from './achievement'
 
 export type SpellId = string
 
@@ -124,6 +126,7 @@ export class Spell {
     if (this.isOnCooldown) return false
     
     this.currentCooldown = this.cooldown
+    logSystem.info(`施放法术: ${this.name}`, { spellId: this.id, manaCost: this.manaCost, cooldown: this.cooldown })
     return true
   }
 
@@ -201,10 +204,12 @@ export class Spell {
 export class SpellManager {
   spells: Map<SpellId, Spell>
   spellDefinitions: Map<SpellId, SpellData>
+  achievementManager: AchievementManager | undefined
 
-  constructor() {
+  constructor(achievementManager?: AchievementManager) {
     this.spells = new Map()
     this.spellDefinitions = new Map()
+    this.achievementManager = achievementManager
   }
 
   registerSpellDefinition(definition: SpellData) {
@@ -221,6 +226,14 @@ export class SpellManager {
       
       if (existing.canLearn(playerTalent, playerSkills)) {
         existing.learn()
+        logSystem.success(`法术学习: ${existing.name}`, { spellId, element: existing.element })
+        
+        // Track achievement progress
+        if (this.achievementManager) {
+          this.achievementManager.incrementAchievementProgress('first_spell')
+          this.achievementManager.incrementAchievementProgress('spell_collector')
+        }
+        
         return true
       }
       return false
@@ -231,6 +244,14 @@ export class SpellManager {
 
     spell.learn()
     this.spells.set(spellId, spell)
+    logSystem.success(`法术学习: ${spell.name}`, { spellId, element: spell.element })
+    
+    // Track achievement progress
+    if (this.achievementManager) {
+      this.achievementManager.incrementAchievementProgress('first_spell')
+      this.achievementManager.incrementAchievementProgress('spell_collector')
+    }
+    
     return true
   }
 

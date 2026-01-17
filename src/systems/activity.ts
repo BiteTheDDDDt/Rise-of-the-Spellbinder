@@ -1,5 +1,7 @@
 import { reactive } from 'vue'
 import type { ResourceId } from './resource'
+import { logSystem } from './log'
+import type { AchievementManager } from './achievement'
 
 export interface ActivityReward {
   resource: ResourceId | 'experience' | 'skill_exp'
@@ -42,9 +44,11 @@ export class ActivityRunner {
   currentActivity: ActivityInstance | null = null
   queue: ActivityInstance[] = reactive([])
   onCompleteCallbacks: ActivityCompleteCallback[] = []
+  achievementManager?: AchievementManager
 
-  constructor() {
+  constructor(achievementManager?: AchievementManager) {
     this.onCompleteCallbacks = []
+    this.achievementManager = achievementManager
   }
 
   startActivity(activity: ActivityData) {
@@ -56,6 +60,7 @@ export class ActivityRunner {
         progress: 0,
         isCompleted: false
       })
+      logSystem.info(`活动已加入队列: ${activity.name}`, { activityId: activity.id, duration: activity.duration })
     } else {
       this.currentActivity = reactive({
         id: Date.now().toString(),
@@ -64,6 +69,7 @@ export class ActivityRunner {
         progress: 0,
         isCompleted: false
       })
+      logSystem.info(`活动开始: ${activity.name}`, { activityId: activity.id, duration: activity.duration })
     }
   }
 
@@ -87,7 +93,16 @@ export class ActivityRunner {
   }
 
   completeActivity(instance: ActivityInstance) {
-    console.log(`Activity ${instance.activity.name} completed`)
+    logSystem.success(`活动完成: ${instance.activity.name}`, { 
+      activityId: instance.activity.id,
+      duration: instance.activity.duration,
+      rewards: instance.activity.rewards
+    })
+    
+    // Track achievement progress
+    if (this.achievementManager) {
+      this.achievementManager.incrementAchievementProgress('activity_enthusiast')
+    }
     
     for (const callback of this.onCompleteCallbacks) {
       callback(instance)

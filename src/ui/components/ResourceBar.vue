@@ -2,8 +2,18 @@
 import { computed } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { ResourceId } from '../../systems/resource'
+import Tooltip from './Tooltip.vue'
 
 const game = useGame()
+
+const resourceDescriptions: Record<ResourceId, string> = {
+  gold: '通用货币，用于购买物品和升级',
+  research: '研究点数，用于解锁新技术和法术',
+  mana_fire: '火元素魔力，用于施放火系法术',
+  mana_water: '水元素魔力，用于施放水系法术',
+  mana_earth: '土元素魔力，用于施放土系法术',
+  mana_wind: '风元素魔力，用于施放风系法术'
+}
 
 const resources = computed(() => {
   const manager = game.resourceManager.value
@@ -15,22 +25,30 @@ const resources = computed(() => {
 
 <template>
   <div class="resource-bar">
-    <div v-for="resource in resources" :key="resource.data.id" class="resource-item">
-      <div class="resource-header">
-        <span class="resource-name">{{ resource.data.name }}</span>
-        <span class="resource-values">
-          {{ Math.floor(resource.value) }} / {{ resource.max === Infinity ? '∞' : Math.floor(resource.max) }}
-        </span>
+    <Tooltip
+      v-for="resource in resources"
+      :key="resource.data.id"
+      :content="resourceDescriptions[resource.data.id]"
+      position="bottom"
+      :delay="200"
+    >
+      <div class="resource-item">
+        <div class="resource-header">
+          <span class="resource-name">{{ resource.data.name }}</span>
+          <span class="resource-values">
+            {{ Math.floor(resource.value) }} / {{ resource.max === Infinity ? '∞' : Math.floor(resource.max) }}
+          </span>
+        </div>
+        <div class="resource-progress" v-if="resource.max !== Infinity">
+          <div class="progress-fill" :style="{ width: `${resource.percent}%` }"></div>
+        </div>
+        <div class="resource-rate">
+          <span v-if="resource.ratePerSecond > 0" class="rate-positive">+{{ resource.ratePerSecond.toFixed(1) }}/s</span>
+          <span v-else-if="resource.ratePerSecond < 0" class="rate-negative">{{ resource.ratePerSecond.toFixed(1) }}/s</span>
+          <span v-else class="rate-neutral">0/s</span>
+        </div>
       </div>
-      <div class="resource-progress" v-if="resource.max !== Infinity">
-        <div class="progress-fill" :style="{ width: `${resource.percent}%` }"></div>
-      </div>
-      <div class="resource-rate">
-        <span v-if="resource.ratePerSecond > 0" class="rate-positive">+{{ resource.ratePerSecond.toFixed(1) }}/s</span>
-        <span v-else-if="resource.ratePerSecond < 0" class="rate-negative">{{ resource.ratePerSecond.toFixed(1) }}/s</span>
-        <span v-else class="rate-neutral">0/s</span>
-      </div>
-    </div>
+    </Tooltip>
   </div>
 </template>
 

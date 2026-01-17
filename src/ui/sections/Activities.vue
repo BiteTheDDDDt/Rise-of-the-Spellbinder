@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { ActivityData } from '../../systems/activity'
+import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
 const activities = ref<ActivityData[]>([])
@@ -23,6 +24,12 @@ const currentActivity = computed(() => game.activityRunner.value.getCurrentActiv
 const progressPercent = computed(() => currentActivity.value ? currentActivity.value.progress * 100 : 0)
 const remainingTime = computed(() => game.activityRunner.value.getRemainingTime())
 const queue = computed(() => game.activityRunner.value.getQueue())
+
+function getActivityTooltip(activity: ActivityData): string {
+  const rewards = activity.rewards.map(r => `+${r.amount} ${r.resource}`).join(', ')
+  const costs = activity.costs ? activity.costs.map(c => `-${c.amount} ${c.resource}`).join(', ') : '无消耗'
+  return `${activity.description}\n\n奖励: ${rewards}\n消耗: ${costs}`
+}
 </script>
 
 <template>
@@ -59,19 +66,21 @@ const queue = computed(() => game.activityRunner.value.getQueue())
     <div class="available-activities">
       <h3>可用活动</h3>
       <div class="activity-grid">
-        <div v-for="activity in activities" :key="activity.id" class="activity-card">
-          <h4 class="activity-name">{{ activity.name }}</h4>
-          <p class="activity-desc">{{ activity.description }}</p>
-          <div class="activity-meta">
-            <span class="duration">⏱️ {{ activity.duration }} 秒</span>
-            <div class="rewards">
-              <span v-for="reward in activity.rewards" :key="reward.resource" class="reward-tag">
-                +{{ reward.amount }} {{ reward.resource }}
-              </span>
+        <Tooltip v-for="activity in activities" :key="activity.id" :content="getActivityTooltip(activity)" position="top" :delay="200">
+          <div class="activity-card">
+            <h4 class="activity-name">{{ activity.name }}</h4>
+            <p class="activity-desc">{{ activity.description }}</p>
+            <div class="activity-meta">
+              <span class="duration">⏱️ {{ activity.duration }} 秒</span>
+              <div class="rewards">
+                <span v-for="reward in activity.rewards" :key="reward.resource" class="reward-tag">
+                  +{{ reward.amount }} {{ reward.resource }}
+                </span>
+              </div>
             </div>
+            <button @click="startActivity(activity)" class="btn start-btn">开始</button>
           </div>
-          <button @click="startActivity(activity)" class="btn start-btn">开始</button>
-        </div>
+        </Tooltip>
       </div>
     </div>
   </div>

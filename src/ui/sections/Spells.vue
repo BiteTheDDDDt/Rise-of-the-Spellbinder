@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { Element } from '../../systems/talent'
 import type { Spell } from '../../systems/spell'
+import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
 const spells = ref<Spell[]>([])
@@ -89,6 +90,13 @@ const canLearnSpellMap = computed(() => {
 })
 
 const elements: Array<Element | 'all'> = ['all', 'fire', 'water', 'earth', 'wind']
+
+const elementDescriptions: Record<Element, string> = {
+  fire: '火元素法术：热情、破坏与变革',
+  water: '水元素法术：流动、治愈与适应',
+  earth: '土元素法术：稳定、防御与生长',
+  wind: '风元素法术：自由、速度与洞察'
+}
 
 function getSpellStatus(spellId: string): 'learned' | 'learnable' | 'locked' {
   if (learnedSpellIds.value.has(spellId)) return 'learned'
@@ -238,14 +246,16 @@ function castSpell(spellId: string) {
           <div class="spell-header">
             <h4 class="spell-name">{{ spell.name }}</h4>
             <div class="spell-meta">
-              <span class="spell-element" :class="spell.element">
-                {{ 
-                  spell.element === 'fire' ? '🔥' :
-                  spell.element === 'water' ? '💧' :
-                  spell.element === 'earth' ? '⛰️' :
-                  '🌪️'
-                }}
-              </span>
+              <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
+                <span class="spell-element" :class="spell.element">
+                  {{ 
+                    spell.element === 'fire' ? '🔥' :
+                    spell.element === 'water' ? '💧' :
+                    spell.element === 'earth' ? '⛰️' :
+                    '🌪️'
+                  }}
+                </span>
+              </Tooltip>
               <span class="spell-level">Lv {{ spell.level }}</span>
             </div>
           </div>
@@ -298,14 +308,16 @@ function castSpell(spellId: string) {
           <div class="spell-header">
             <h4 class="spell-name">{{ spell.name }}</h4>
             <div class="spell-meta">
-              <span class="spell-element" :class="spell.element">
-                {{ 
-                  spell.element === 'fire' ? '🔥' :
-                  spell.element === 'water' ? '💧' :
-                  spell.element === 'earth' ? '⛰️' :
-                  '🌪️'
-                }}
-              </span>
+              <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
+                <span class="spell-element" :class="spell.element">
+                  {{ 
+                    spell.element === 'fire' ? '🔥' :
+                    spell.element === 'water' ? '💧' :
+                    spell.element === 'earth' ? '⛰️' :
+                    '🌪️'
+                  }}
+                </span>
+              </Tooltip>
               <span class="spell-level">Lv {{ spell.level }}</span>
             </div>
           </div>
@@ -357,14 +369,16 @@ function castSpell(spellId: string) {
           <div class="spell-header">
             <h4 class="spell-name">{{ spell.name }}</h4>
             <div class="spell-meta">
-              <span class="spell-element" :class="spell.element">
-                {{ 
-                  spell.element === 'fire' ? '🔥' :
-                  spell.element === 'water' ? '💧' :
-                  spell.element === 'earth' ? '⛰️' :
-                  '🌪️'
-                }}
-              </span>
+              <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
+                <span class="spell-element" :class="spell.element">
+                  {{ 
+                    spell.element === 'fire' ? '🔥' :
+                    spell.element === 'water' ? '💧' :
+                    spell.element === 'earth' ? '⛰️' :
+                    '🌪️'
+                  }}
+                </span>
+              </Tooltip>
               <span class="spell-level">Lv {{ spell.level }}</span>
             </div>
           </div>

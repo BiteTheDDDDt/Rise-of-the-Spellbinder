@@ -2,6 +2,7 @@ import { gameState } from '.'
 
 import { Player } from '../entities/player'
 import { ActivityRunner } from '../systems/activity'
+import { logSystem } from '../systems/log'
 
 export interface SaveData {
   version: string
@@ -58,6 +59,7 @@ export class SaveSystem {
   loadSaveData(data: SaveData): boolean {
     try {
       if (data.version !== VERSION) {
+        logSystem.warning(`存档版本不匹配: ${data.version} != ${VERSION}`)
         console.warn(`Save version mismatch: ${data.version} != ${VERSION}`)
         // TODO: implement migration logic
       }
@@ -74,9 +76,11 @@ export class SaveSystem {
         state.activityRunner = ActivityRunner.fromJSON(data.activityRunner)
       }
 
+      logSystem.info('游戏数据加载成功')
       console.log('Game loaded successfully')
       return true
     } catch (error) {
+      logSystem.error('加载游戏数据失败', { error: String(error) })
       console.error('Failed to load save data:', error)
       return false
     }
@@ -87,9 +91,11 @@ export class SaveSystem {
       const data = this.getSaveData()
       localStorage.setItem(SAVE_KEY, JSON.stringify(data))
       this._lastSaveTime = Date.now()
-      console.debug('Game saved to localStorage')
+      logSystem.success('游戏已保存到本地存储', { savedAt: Date.now() })
+      if (import.meta.env.DEV) console.debug('Game saved to localStorage')
       return true
     } catch (error) {
+      logSystem.error('保存游戏失败', { error: String(error) })
       console.error('Failed to save to localStorage:', error)
       return false
     }
@@ -101,8 +107,13 @@ export class SaveSystem {
       if (!json) return false
 
       const data = JSON.parse(json) as SaveData
-      return this.loadSaveData(data)
+      const success = this.loadSaveData(data)
+      if (success) {
+        logSystem.success('游戏已从本地存储加载', { savedAt: data.meta?.savedAt })
+      }
+      return success
     } catch (error) {
+      logSystem.error('加载游戏失败', { error: String(error) })
       console.error('Failed to load from localStorage:', error)
       return false
     }
@@ -116,8 +127,10 @@ export class SaveSystem {
   importSave(json: string): boolean {
     try {
       const data = JSON.parse(json) as SaveData
+      logSystem.info('正在导入存档', { version: data.version })
       return this.loadSaveData(data)
     } catch (error) {
+      logSystem.error('导入存档失败', { error: String(error) })
       console.error('Failed to import save:', error)
       return false
     }

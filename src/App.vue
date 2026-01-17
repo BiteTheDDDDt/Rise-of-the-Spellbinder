@@ -7,7 +7,14 @@ import ResourceBar from './ui/components/ResourceBar.vue'
 import Activities from './ui/sections/Activities.vue'
 import Skills from './ui/sections/Skills.vue'
 import Spells from './ui/sections/Spells.vue'
+import Achievements from './ui/sections/Achievements.vue'
+import StartScreen from './ui/sections/StartScreen.vue'
+import NewGame from './ui/sections/NewGame.vue'
+import Character from './ui/sections/Character.vue'
+import Settings from './ui/sections/Settings.vue'
+import GameLog from './ui/components/GameLog.vue'
 import { setLocale } from './i18n'
+import { logSystem } from './systems/log'
 
 const { t, locale } = useI18n()
 const game = useGame()
@@ -30,19 +37,50 @@ watch(locale, (newLocale) => {
   }
 })
 
-const activeMenu = ref('overview')
-const magicSubMenu = ref('skills')
+const activeMenu = ref('activities')
 const menuItems = ref<Array<{id: string, icon: string, label: string}>>([])
+const currentView = ref(game.state.hasStarted ? 'main' : 'start')
+
+// Watch for menu unlocks
+watch(menuItems, (newItems, oldItems = []) => {
+  const newIds = newItems.map(item => item.id)
+  const oldIds = oldItems.map(item => item.id)
+  const addedIds = newIds.filter(id => !oldIds.includes(id))
+  for (const addedId of addedIds) {
+    const addedItem = newItems.find(item => item.id === addedId)
+    if (addedItem) {
+      logSystem.success(`新菜单已解锁: ${addedItem.label}`, { menuId: addedId })
+    }
+  }
+})
 
 const updateMenuItems = () => {
-  menuItems.value = [
-    { id: 'overview', icon: '📊', label: t('menu.overview') },
-    { id: 'resources', icon: '💰', label: t('menu.resources') },
-    { id: 'activities', icon: '📋', label: '活动' },
-    { id: 'magic', icon: '✨', label: t('menu.magic') },
-    { id: 'research', icon: '🔬', label: t('menu.research') },
-    { id: 'settings', icon: '⚙️', label: t('menu.settings') }
+  const items = [
+    { id: 'activities', icon: '⚡', label: '活动' },
+    { id: 'skills', icon: '📚', label: '技能' },
+    { id: 'spells', icon: '✨', label: '法术' },
+    { id: 'character', icon: '👤', label: '角色' },
+    { id: 'achievements', icon: '🏆', label: '成就' },
+    { id: 'settings', icon: '⚙️', label: '设置' }
   ]
+  
+  // 解锁逻辑
+  const unlockedItems = items.filter(item => {
+    if (item.id === 'spells') {
+      // 检查是否学会至少一个法术
+      const learnedSpells = game.player.value?.spellManager?.getLearnedSpells?.()
+      return learnedSpells && learnedSpells.length > 0
+    }
+    if (item.id === 'achievements') {
+      // 检查是否解锁至少一个成就
+      const unlockedAchievements = game.player.value?.achievementManager?.getUnlockedAchievements?.()
+      return unlockedAchievements && unlockedAchievements.length > 0
+    }
+    // 默认解锁其他菜单
+    return true
+  })
+  
+  menuItems.value = unlockedItems
 }
 
 watchEffect(updateMenuItems)
@@ -88,137 +126,138 @@ function handleImport(event: Event) {
   reader.readAsText(file)
   input.value = ''
 }
+
+function showNewGame() {
+  currentView.value = 'new-game'
+}
+
+function showMainGame() {
+  game.state.hasStarted = true
+  currentView.value = 'main'
+}
+
+function handleNewGameCreated() {
+  showMainGame()
+}
+
+// 监视游戏状态，如果hasStarted变为false，则显示开始界面
+watch(() => game.state.hasStarted, (hasStarted) => {
+  if (!hasStarted && currentView.value !== 'start') {
+    currentView.value = 'start'
+  }
+})
 </script>
 
 <template>
   <div class="app-container">
-    <!-- Top Bar -->
-    <header class="top-bar">
-      <div class="top-left">
-        <h1 class="game-title">🧙 {{ t('app.title') }}</h1>
-        <div class="game-time">
-          ⏱️ {{ Math.floor(game.gameTime.value) }}s
-          <button @click="game.togglePause" class="pause-btn">
-            {{ game.isPaused ? '▶️' : '⏸️' }}
-          </button>
+    <!-- 开始界面 -->
+    <StartScreen
+      v-if="currentView === 'start'"
+      @startNewGame="showNewGame"
+      @continueGame="showMainGame"
+    />
+    
+    <!-- 新游戏创建界面 -->
+    <NewGame
+      v-else-if="currentView === 'new-game'"
+      @created="handleNewGameCreated"
+    />
+    
+    <!-- 主游戏界面 -->
+    <div v-else-if="currentView === 'main'" class="main-game">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-left">
+          <h1 class="game-title">🧙 {{ t('app.title') }}</h1>
+          <div class="game-time">
+            ⏱️ {{ Math.floor(game.gameTime.value) }}s
+            <button @click="game.togglePause" class="pause-btn">
+              {{ game.isPaused ? '▶️' : '⏸️' }}
+            </button>
+          </div>
         </div>
+        <div class="top-right">
+          <select v-model="locale" class="lang-select">
+            <option v-for="lang in languages" :key="lang.code" :value="lang.code">
+              {{ lang.label }}
+            </option>
+          </select>
+          <div class="save-buttons">
+            <button @click="handleSave" class="btn">💾 {{ t('common.save') }}</button>
+            <button @click="handleLoad" class="btn">📂 {{ t('common.load') }}</button>
+            <button @click="handleExport" class="btn">📤 {{ t('common.export') }}</button>
+            <label class="btn import-btn">
+              📥 {{ t('common.import') }}
+              <input type="file" accept=".json" @change="handleImport" hidden />
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <!-- Resource Bar -->
+      <ResourceBar />
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+          <ul class="menu">
+            <li
+              v-for="item in menuItems"
+              :key="item.id"
+              :class="{ active: activeMenu === item.id }"
+              @click="activeMenu = item.id"
+            >
+              <span class="menu-icon">{{ item.icon }}</span>
+              <span class="menu-label">{{ item.label }}</span>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="content-area">
+          <div class="content-header">
+            <h2>{{ menuItems.find(item => item.id === activeMenu)?.label }}</h2>
+          </div>
+          <div class="content-body">
+            <div v-if="activeMenu === 'activities'" class="activities">
+              <Activities />
+            </div>
+            <div v-else-if="activeMenu === 'skills'" class="skills">
+              <Skills />
+            </div>
+            <div v-else-if="activeMenu === 'spells'" class="spells">
+              <Spells />
+            </div>
+            <div v-else-if="activeMenu === 'character'" class="character">
+              <Character />
+            </div>
+            <div v-else-if="activeMenu === 'achievements'" class="achievements">
+              <Achievements />
+            </div>
+            <div v-else-if="activeMenu === 'settings'" class="settings">
+              <Settings />
+            </div>
+          </div>
+        </main>
+
+        <!-- Game Log Sidebar -->
+        <aside class="log-sidebar">
+          <GameLog />
+        </aside>
       </div>
-      <div class="top-right">
-        <select v-model="locale" class="lang-select">
-          <option v-for="lang in languages" :key="lang.code" :value="lang.code">
-            {{ lang.label }}
-          </option>
-        </select>
-        <div class="save-buttons">
-          <button @click="handleSave" class="btn">💾 {{ t('common.save') }}</button>
-          <button @click="handleLoad" class="btn">📂 {{ t('common.load') }}</button>
-          <button @click="handleExport" class="btn">📤 {{ t('common.export') }}</button>
-          <label class="btn import-btn">
-            📥 {{ t('common.import') }}
-            <input type="file" accept=".json" @change="handleImport" hidden />
-          </label>
-        </div>
-      </div>
-    </header>
 
-    <!-- Resource Bar -->
-    <ResourceBar />
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Sidebar -->
-      <nav class="sidebar">
-        <ul class="menu">
-          <li
-            v-for="item in menuItems"
-            :key="item.id"
-            :class="{ active: activeMenu === item.id }"
-            @click="activeMenu = item.id"
-          >
-            <span class="menu-icon">{{ item.icon }}</span>
-            <span class="menu-label">{{ item.label }}</span>
-          </li>
-        </ul>
-      </nav>
-
-      <!-- Content Area -->
-      <main class="content-area">
-        <div class="content-header">
-          <h2>{{ menuItems.find(item => item.id === activeMenu)?.label }}</h2>
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-content">
+          <span>Rise of the Spellbinder v1.0.0</span>
+          <span> | </span>
+          <span>Game Loop: {{ game.isPaused ? 'Paused' : 'Running' }}</span>
+          <span> | </span>
+          <span>Auto-save: Every 30s</span>
         </div>
-        <div class="content-body">
-          <div v-if="activeMenu === 'overview'" class="overview">
-            <h3>📈 {{ t('app.title') }}</h3>
-            <p>{{ t('app.description') }}</p>
-            <div class="stats">
-              <div class="stat">
-                <div class="stat-label">Game Time</div>
-                <div class="stat-value">{{ Math.floor(game.gameTime.value) }} seconds</div>
-              </div>
-              <div class="stat">
-                <div class="stat-label">Status</div>
-                <div class="stat-value">{{ game.isPaused ? '⏸️ Paused' : '▶️ Running' }}</div>
-              </div>
-              <div class="stat">
-                <div class="stat-label">Save Status</div>
-                <div class="stat-value">{{ saveSystem.hasSave() ? '💾 Saved' : '📭 No Save' }}</div>
-              </div>
-            </div>
-          </div>
-          <div v-else-if="activeMenu === 'resources'" class="resources">
-            <h3>💰 Resources</h3>
-            <p>Resource management will be implemented in Phase 2.</p>
-          </div>
-          <div v-else-if="activeMenu === 'activities'" class="activities">
-            <Activities />
-          </div>
-          <div v-else-if="activeMenu === 'magic'" class="magic">
-            <div class="magic-header">
-              <h3>✨ 魔法系统</h3>
-              <div class="magic-tabs">
-                <button 
-                  @click="magicSubMenu = 'skills'" 
-                  :class="{ active: magicSubMenu === 'skills' }"
-                  class="tab-btn"
-                >
-                  🎯 技能
-                </button>
-                <button 
-                  @click="magicSubMenu = 'spells'" 
-                  :class="{ active: magicSubMenu === 'spells' }"
-                  class="tab-btn"
-                >
-                  ✨ 法术
-                </button>
-              </div>
-            </div>
-            <div class="magic-content">
-              <Skills v-if="magicSubMenu === 'skills'" />
-              <Spells v-if="magicSubMenu === 'spells'" />
-            </div>
-          </div>
-          <div v-else-if="activeMenu === 'research'" class="research">
-            <h3>🔬 Research</h3>
-            <p>Research system will be implemented in Phase 2.</p>
-          </div>
-          <div v-else-if="activeMenu === 'settings'" class="settings">
-            <h3>⚙️ Settings</h3>
-            <p>Game settings will be implemented later.</p>
-          </div>
-        </div>
-      </main>
+      </footer>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <span>Rise of the Spellbinder v1.0.0</span>
-        <span> | </span>
-        <span>Game Loop: {{ game.isPaused ? 'Paused' : 'Running' }}</span>
-        <span> | </span>
-        <span>Auto-save: Every 30s</span>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -318,7 +357,6 @@ function handleImport(event: Event) {
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
 }
 
 .sidebar {
@@ -326,6 +364,16 @@ function handleImport(event: Event) {
   background: #1e1e1e;
   border-right: 1px solid #333;
   padding: 20px 0;
+}
+
+.log-sidebar {
+  width: 300px;
+  background: #1e1e1e;
+  border-left: 1px solid #333;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .menu {
@@ -364,7 +412,7 @@ function handleImport(event: Event) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .content-header {
@@ -381,7 +429,6 @@ function handleImport(event: Event) {
 .content-body {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
 }
 
 .overview h3,
@@ -472,5 +519,11 @@ function handleImport(event: Event) {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.main-game {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 </style>

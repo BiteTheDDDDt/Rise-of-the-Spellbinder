@@ -8,6 +8,7 @@ export interface GameStateData {
   lastUpdate: number
   player: Player
   activityRunner: ActivityRunner
+  hasStarted: boolean
 }
 
 export class GameState {
@@ -15,7 +16,7 @@ export class GameState {
 
   constructor(initialData?: Partial<GameStateData>) {
     const defaultPlayer = new Player('Apprentice')
-    const defaultActivityRunner = new ActivityRunner()
+    const defaultActivityRunner = new ActivityRunner(defaultPlayer.achievementManager)
     
     this.data = reactive({
       gameTime: 0,
@@ -23,6 +24,7 @@ export class GameState {
       lastUpdate: Date.now(),
       player: defaultPlayer,
       activityRunner: defaultActivityRunner,
+      hasStarted: false,
       ...initialData
     })
   }
@@ -69,6 +71,7 @@ export class GameState {
     this.data.isPaused = false
     this.data.lastUpdate = Date.now()
     this.data.player = new Player('Apprentice')
-    this.data.activityRunner = new ActivityRunner()
+    this.data.activityRunner = new ActivityRunner(this.data.player.achievementManager)
+    this.data.hasStarted = false
   }
 }

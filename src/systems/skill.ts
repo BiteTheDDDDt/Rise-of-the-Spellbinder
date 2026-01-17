@@ -1,5 +1,7 @@
 import { reactive } from 'vue'
 import type { Element } from './talent'
+import { logSystem } from './log'
+import type { AchievementManager } from './achievement'
 
 export type SkillId = string
 
@@ -95,9 +97,16 @@ export class Skill {
     if (this.isMaxed) return
 
     const overflow = this.data.currentExp - this.data.requiredExp
+    const oldLevel = this.data.currentLevel
     this.data.currentLevel += 1
     this.data.currentExp = overflow
     this.data.requiredExp = this.calculateRequiredExp(this.data.currentLevel)
+    
+    logSystem.success(`技能升级: ${this.name} Lv.${oldLevel} → Lv.${this.data.currentLevel}`, {
+      skillId: this.id,
+      oldLevel,
+      newLevel: this.data.currentLevel
+    })
   }
 
   calculateRequiredExp(level: number): number {
@@ -156,10 +165,12 @@ export class Skill {
 export class SkillManager {
   skills: Map<SkillId, Skill>
   skillDefinitions: Map<SkillId, Omit<SkillData, 'currentLevel' | 'currentExp' | 'requiredExp'>>
+  achievementManager: AchievementManager | undefined
 
-  constructor() {
+  constructor(achievementManager?: AchievementManager) {
     this.skills = new Map()
     this.skillDefinitions = new Map()
+    this.achievementManager = achievementManager
   }
 
   registerSkillDefinition(definition: Omit<SkillData, 'currentLevel' | 'currentExp' | 'requiredExp'>) {
@@ -176,6 +187,14 @@ export class SkillManager {
     if (!skill.canUnlock(playerTalent)) return false
 
     this.skills.set(skillId, skill)
+    logSystem.success(`技能解锁: ${skill.name}`, { skillId, element: skill.element })
+    
+    // Track achievement progress
+    if (this.achievementManager) {
+      this.achievementManager.incrementAchievementProgress('first_skill')
+      this.achievementManager.incrementAchievementProgress('skill_master')
+    }
+    
     return true
   }
 

@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { Element } from '../../systems/talent'
 import type { Skill } from '../../systems/skill'
+import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
 const skills = ref<Skill[]>([])
@@ -55,6 +56,14 @@ const lockedSkills = computed(() => {
 const unlockableSkillIds = computed(() => new Set(lockedSkills.value.map(skill => skill.id)))
 
 const elements: Array<Element | 'neutral' | 'all'> = ['all', 'fire', 'water', 'earth', 'wind', 'neutral']
+
+const elementDescriptions: Record<Element | 'neutral', string> = {
+  fire: '火元素：代表热情、破坏与变革',
+  water: '水元素：代表流动、治愈与适应',
+  earth: '土元素：代表稳定、防御与生长',
+  wind: '风元素：代表自由、速度与洞察',
+  neutral: '中性：通用技能，不受元素限制'
+}
 
 
 
@@ -123,14 +132,16 @@ function unlockSkill(skillId: string) {
         <div v-for="skill in unlockedSkills" :key="skill.id" class="skill-card unlocked">
           <div class="skill-header">
             <h4 class="skill-name">{{ skill.name }}</h4>
-            <span class="skill-element" :class="skill.element">
-              {{ 
-                skill.element === 'fire' ? '🔥' :
-                skill.element === 'water' ? '💧' :
-                skill.element === 'earth' ? '⛰️' :
-                skill.element === 'wind' ? '🌪️' : '⚪'
-              }}
-            </span>
+              <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
+              <span class="skill-element" :class="skill.element">
+                {{ 
+                  skill.element === 'fire' ? '🔥' :
+                  skill.element === 'water' ? '💧' :
+                  skill.element === 'earth' ? '⛰️' :
+                  skill.element === 'wind' ? '🌪️' : '⚪'
+                }}
+              </span>
+            </Tooltip>
           </div>
           <p class="skill-desc">{{ skill.description }}</p>
           
@@ -168,14 +179,16 @@ function unlockSkill(skillId: string) {
         <div v-for="skill in lockedSkills" :key="skill.id" class="skill-card locked">
           <div class="skill-header">
             <h4 class="skill-name">{{ skill.name }}</h4>
-            <span class="skill-element" :class="skill.element">
-              {{ 
-                skill.element === 'fire' ? '🔥' :
-                skill.element === 'water' ? '💧' :
-                skill.element === 'earth' ? '⛰️' :
-                skill.element === 'wind' ? '🌪️' : '⚪'
-              }}
-            </span>
+              <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
+              <span class="skill-element" :class="skill.element">
+                {{ 
+                  skill.element === 'fire' ? '🔥' :
+                  skill.element === 'water' ? '💧' :
+                  skill.element === 'earth' ? '⛰️' :
+                  skill.element === 'wind' ? '🌪️' : '⚪'
+                }}
+              </span>
+            </Tooltip>
           </div>
           <p class="skill-desc">{{ skill.description }}</p>
           
@@ -214,14 +227,16 @@ function unlockSkill(skillId: string) {
         <div v-for="skill in filteredSkills" :key="skill.id" class="skill-card all">
           <div class="skill-header">
             <h4 class="skill-name">{{ skill.name }}</h4>
-            <span class="skill-element" :class="skill.element">
-              {{ 
-                skill.element === 'fire' ? '🔥' :
-                skill.element === 'water' ? '💧' :
-                skill.element === 'earth' ? '⛰️' :
-                skill.element === 'wind' ? '🌪️' : '⚪'
-              }}
-            </span>
+              <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
+              <span class="skill-element" :class="skill.element">
+                {{ 
+                  skill.element === 'fire' ? '🔥' :
+                  skill.element === 'water' ? '💧' :
+                  skill.element === 'earth' ? '⛰️' :
+                  skill.element === 'wind' ? '🌪️' : '⚪'
+                }}
+              </span>
+            </Tooltip>
           </div>
           <p class="skill-desc">{{ skill.description }}</p>
           

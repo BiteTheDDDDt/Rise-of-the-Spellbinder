@@ -10,6 +10,9 @@ export const gameState = new GameState()
 // Create game loop instance
 export const gameLoop = new GameLoop(gameState)
 
+// Setup auto-save after gameState is fully initialized
+saveSystem.setupAutoSave()
+
 // Export for convenience
 export { GameState, GameLoop, SaveSystem }
 export { saveSystem, definitionsManager }

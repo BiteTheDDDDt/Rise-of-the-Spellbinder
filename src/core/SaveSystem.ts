@@ -27,12 +27,15 @@ export class SaveSystem {
   // @ts-ignore
   private _lastSaveTime: number = 0
   skipAutoLoad: boolean = false
+  private autoSaveSetup = false  // 标记是否已设置自动保存
 
   constructor() {
-    this.setupAutoSave()
+    // 不在构造函数中设置自动保存，延迟到游戏完全初始化后
   }
 
-  private setupAutoSave() {
+  public setupAutoSave() {
+    if (this.autoSaveSetup) return  // 防止重复设置
+
     // Auto-save every 30 seconds
     this.autoSaveTimer = window.setInterval(() => {
       this.saveToLocalStorage()
@@ -40,6 +43,8 @@ export class SaveSystem {
 
     // Also save when page is about to unload
     window.addEventListener('beforeunload', () => this.saveToLocalStorage())
+
+    this.autoSaveSetup = true
   }
 
   getSaveData(): SaveData {

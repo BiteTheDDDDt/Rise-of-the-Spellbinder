@@ -62,11 +62,7 @@ const updateMenuItems = () => {
   
   // 解锁逻辑
   const unlockedItems = items.filter(item => {
-    if (item.id === 'spells') {
-      // 检查是否学会至少一个法术
-      const learnedSpells = game.player.value?.spellManager?.getLearnedSpells?.()
-      return learnedSpells && learnedSpells.length > 0
-    }
+    // 法术页面始终解锁，玩家需要访问它来学习法术
     if (item.id === 'achievements') {
       // 检查是否解锁至少一个成就
       const unlockedAchievements = game.player.value?.achievementManager?.getUnlockedAchievements?.()
@@ -75,7 +71,7 @@ const updateMenuItems = () => {
     if (item.id === 'explore') {
       // 检查是否学会任意攻击法术
       const learnedSpells = game.player.value?.spellManager?.getLearnedSpells?.()
-      const hasAttackSpell = learnedSpells?.some(spell => 
+      const hasAttackSpell = learnedSpells?.some(spell =>
         spell.data.effects.some(effect => effect.type === 'damage')
       )
       return hasAttackSpell || false

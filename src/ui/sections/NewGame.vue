@@ -90,6 +90,17 @@ function createCharacter() {
   // 重新连接活动回调
   gameState.reconnectActivityCallbacks()
 
+  // 自动学习初始法术
+  const spellIds = initialSpells[selectedOrigin.value]
+  for (const spellId of spellIds) {
+    const allSkills = newPlayer.skillManager.getAllSkills()
+    newPlayer.spellManager.learnSpell(
+      spellId,
+      newPlayer.talent.data,
+      new Map(allSkills.map(skill => [skill.id, { currentLevel: skill.currentLevel }]))
+    )
+  }
+
   // 删除旧存档
   saveSystem.deleteSave()
 

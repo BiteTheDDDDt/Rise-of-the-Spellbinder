@@ -157,11 +157,13 @@ export class ClassTree {
     this.nodes = reactive(new Map())
     this.edges = reactive(new Map())
     this.achievements = reactive([])
+    console.log('[ClassTree] Constructor called, nodes initialized')
   }
 
   addNode(node: ClassNode) {
     this.nodes.set(node.id, node)
     this.edges.set(node.id, [])
+    console.log(`[ClassTree] Added node: ${node.id} (${node.name})`)
   }
 
   addEdge(from: ClassId, to: ClassId) {

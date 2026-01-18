@@ -19,6 +19,7 @@ import Combat from './ui/sections/Combat.vue'
 import Inventory from './ui/sections/Inventory.vue'
 import Shop from './ui/sections/Shop.vue'
 import SimpleClasses from './ui/sections/SimpleClasses.vue'
+import ClassTree from './ui/sections/ClassTree.vue'
 import { logSystem } from './systems/log'
 import { gitInfo } from './utils/git-info'
 
@@ -316,7 +317,7 @@ watch(() => game.state.hasStarted, (hasStarted) => {
               <Shop />
             </div>
             <div v-else-if="activeMenu === 'classes'" class="classes">
-              <SimpleClasses />
+              <ClassTree />
             </div>
             <div v-else-if="activeMenu === 'settings'" class="settings">
               <Settings />

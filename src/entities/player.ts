@@ -6,6 +6,7 @@ import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
 import { SimpleClassManager } from '../systems/simpleClass'
+import { ClassManager, createDefaultClassTree } from '../systems/class'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -19,6 +20,7 @@ export interface PlayerData {
   achievementManager: AchievementManager
   inventory: Inventory
   simpleClassManager: any
+  classManager: ClassManager
 }
 
 export class Player {
@@ -33,6 +35,9 @@ export class Player {
       const spellManager = new SpellManager(achievementManager)
       const inventory = new Inventory()
       const simpleClassManager = new SimpleClassManager()
+      const classManager = new ClassManager()
+      classManager.setClassTree(createDefaultClassTree())
+      simpleClassManager.init()
 
       this.data = reactive({
         name,
@@ -44,13 +49,30 @@ export class Player {
         spellManager,
         achievementManager,
         inventory,
-        simpleClassManager
+        simpleClassManager,
+        classManager
       })
 
       this.applyTalentBonuses()
+
+      // 自动解锁初始职业"学徒"
+      this.unlockInitialClass()
     } catch (error) {
       console.error('[Player] Error in constructor:', error)
       throw error
+    }
+  }
+
+  private unlockInitialClass() {
+    try {
+      const apprenticeNode = this.data.classManager.classTree.getNode('apprentice')
+      if (apprenticeNode && !this.data.classManager.unlockedClasses.includes('apprentice')) {
+        this.data.classManager.unlockedClasses.push('apprentice')
+        this.data.classManager.classTree.achievements.push('apprentice')
+        console.log('[Player] Initial class unlocked: Apprentice')
+      }
+    } catch (error) {
+      console.error('[Player] Error unlocking initial class:', error)
     }
   }
 
@@ -115,6 +137,10 @@ export class Player {
     return this.data.simpleClassManager
   }
 
+  get classManager(): ClassManager {
+    return this.data.classManager
+  }
+
   addExperience(amount: number) {
     this.data.experience += amount
     const required = this.getExperienceRequiredForNextLevel()
@@ -142,9 +168,60 @@ export class Player {
   update(deltaSeconds: number) {
     this.data.resourceManager.update(deltaSeconds)
     this.data.spellManager.update(deltaSeconds)
-    
+
+    // 应用职业效果
+    this.applyClassEffects()
+
     // 应用技能提供的魔力恢复加成
     this.applySkillManaRegen(deltaSeconds)
+  }
+
+  private applyClassEffects() {
+    if (!this.data.classManager || !this.data.skillManager) return
+
+    const unlockedSkills = this.data.classManager.getUnlockedSkills()
+    const skillMaxBonuses = this.data.classManager.getSkillMaxBonuses()
+
+    // 解锁技能
+    for (const skillId of unlockedSkills) {
+      if (!this.data.skillManager.skills.has(skillId)) {
+        const definition = this.data.skillManager.skillDefinitions.get(skillId)
+        if (definition) {
+          this.data.skillManager.unlockSkill(skillId, this.data.talent.data)
+        }
+      }
+    }
+
+    // 应用技能上限加成
+    for (const [skillId, bonus] of skillMaxBonuses.entries()) {
+      const skill = this.data.skillManager.getSkill(skillId)
+      if (skill) {
+        const newMax = skill.data.maxLevel + bonus
+        skill.data.maxLevel = Math.max(newMax, skill.currentLevel)
+      }
+    }
+
+    // 应用其他职业效果（法力上限、法力恢复、法术强度等）
+    const classEffects = this.data.classManager.getClassEffects()
+    for (const effect of classEffects) {
+      switch (effect.type) {
+        case 'mana_capacity':
+          const manaResources = ['mana_fire', 'mana_water', 'mana_earth', 'mana_wind'] as const
+          for (const resourceId of manaResources) {
+            const resource = this.data.resourceManager.getResource(resourceId)
+            if (resource) {
+              resource.setMax(100 * this.data.talent.getManaCapacityMultiplier(
+                resourceId.replace('mana_', '') as any
+              ) + effect.value)
+            }
+          }
+          break
+        case 'mana_regen':
+          // 添加到玩家属性中，用于技能计算
+          this.getSkillStats()
+          break
+      }
+    }
   }
 
   private applySkillManaRegen(deltaSeconds: number) {
@@ -185,7 +262,8 @@ export class Player {
       spells: this.data.spellManager.toJSON(),
       achievements: this.data.achievementManager.toJSON(),
       inventory: this.data.inventory.toJSON(),
-      classes: this.data.simpleClassManager.toJSON()
+      classes: this.data.simpleClassManager.toJSON(),
+      classManager: this.data.classManager.toJSON()
     }
   }
 
@@ -420,6 +498,11 @@ export class Player {
           player.data.simpleClassManager = loadedManager.fromJSON(data.classes)
         }
       }
+    }
+
+    if (data.classManager) {
+      player.data.classManager = ClassManager.fromJSON(data.classManager)
+      player.data.classManager.setClassTree(createDefaultClassTree())
     }
 
     return player

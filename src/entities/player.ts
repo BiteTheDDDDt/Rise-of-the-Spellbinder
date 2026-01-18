@@ -5,6 +5,7 @@ import { SkillManager } from '../systems/skill'
 import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
+import SimpleClassManager from '../systems/simpleClass'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -17,6 +18,7 @@ export interface PlayerData {
   spellManager: SpellManager
   achievementManager: AchievementManager
   inventory: Inventory
+  simpleClassManager: any
 }
 
 export class Player {
@@ -30,6 +32,7 @@ export class Player {
       const skillManager = new SkillManager(achievementManager)
       const spellManager = new SpellManager(achievementManager)
       const inventory = new Inventory()
+      const simpleClassManager = new SimpleClassManager()
 
       this.data = reactive({
         name,
@@ -40,7 +43,8 @@ export class Player {
         skillManager,
         spellManager,
         achievementManager,
-        inventory
+        inventory,
+        simpleClassManager
       })
 
       this.applyTalentBonuses()
@@ -105,6 +109,10 @@ export class Player {
 
   get inventory(): Inventory {
     return this.data.inventory
+  }
+
+  get simpleClassManager(): any {
+    return this.data.simpleClassManager
   }
 
   addExperience(amount: number) {
@@ -176,7 +184,8 @@ export class Player {
       skills: this.data.skillManager.toJSON(),
       spells: this.data.spellManager.toJSON(),
       achievements: this.data.achievementManager.toJSON(),
-      inventory: this.data.inventory.toJSON()
+      inventory: this.data.inventory.toJSON(),
+      classes: this.data.simpleClassManager.toJSON()
     }
   }
 
@@ -403,6 +412,16 @@ export class Player {
     }
 
     player.applyTalentBonuses()
+
+    if (data.classes) {
+      if (player.data.simpleClassManager) {
+        const loadedManager = player.data.simpleClassManager.constructor()
+        if (loadedManager.fromJSON) {
+          player.data.simpleClassManager = loadedManager.fromJSON(data.classes)
+        }
+      }
+    }
+
     return player
   }
 }

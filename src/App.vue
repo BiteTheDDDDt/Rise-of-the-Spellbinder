@@ -18,6 +18,7 @@ import Explore from './ui/sections/Explore.vue'
 import Combat from './ui/sections/Combat.vue'
 import Inventory from './ui/sections/Inventory.vue'
 import Shop from './ui/sections/Shop.vue'
+import SimpleClasses from './ui/sections/SimpleClasses.vue'
 import { logSystem } from './systems/log'
 import { gitInfo } from './utils/git-info'
 
@@ -57,6 +58,7 @@ watch(menuItems, (newItems, oldItems = []) => {
       { id: 'activities', icon: '⚡', label: t('common.activities') },
       { id: 'skills', icon: '📚', label: t('common.skills') },
       { id: 'spells', icon: '✨', label: t('common.spells') },
+      { id: 'classes', icon: '🎭', label: '职业' },
       { id: 'explore', icon: '🗺️', label: t('common.explore') },
       { id: 'combat', icon: '⚔️', label: t('common.fight') },
       { id: 'character', icon: '👤', label: t('common.character') },
@@ -312,6 +314,9 @@ watch(() => game.state.hasStarted, (hasStarted) => {
             </div>
             <div v-else-if="activeMenu === 'shop'" class="shop">
               <Shop />
+            </div>
+            <div v-else-if="activeMenu === 'classes'" class="classes">
+              <SimpleClasses />
             </div>
             <div v-else-if="activeMenu === 'settings'" class="settings">
               <Settings />

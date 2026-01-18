@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import { definitionsManager } from '../../core'
 import type { Element } from '../../systems/talent'
@@ -8,9 +9,14 @@ import { LearningActivityFactory } from '../../systems/learningActivity'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
+const { t } = useI18n()
 const skills = ref<Skill[]>([])
 const skillDefinitions = ref<any[]>([])
 const selectedElement = ref<Element | 'neutral' | 'all'>('all')
+
+function getSkillName(id: string, fallback: string): string {
+  return t(`skill.${id}`, fallback)
+}
 
 // Load skill definitions
 onMounted(async () => {
@@ -109,7 +115,7 @@ function startSkillPractice(skillId: string) {
   // 开始活动
   const success = game.activityRunner.value.startActivity(practiceActivity)
   if (!success) {
-    alert(`无法开始练习: ${skill.name}\n资源不足`)
+    alert(`无法开始练习: ${getSkillName(skill.id, skill.name)}\n资源不足`)
   }
 }
 
@@ -164,7 +170,7 @@ function unlockSkill(skillId: string) {
       <div v-if="unlockedSkills.length > 0" class="skill-grid">
         <div v-for="skill in unlockedSkills" :key="skill.id" class="skill-card unlocked">
           <div class="skill-header">
-            <h4 class="skill-name">{{ skill.name }}</h4>
+            <h4 class="skill-name">{{ getSkillName(skill.id, skill.name) }}</h4>
               <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
               <span class="skill-element" :class="skill.element">
                 {{ 
@@ -218,7 +224,7 @@ function unlockSkill(skillId: string) {
       <div v-if="lockedSkills.length > 0" class="skill-grid">
         <div v-for="skill in lockedSkills" :key="skill.id" class="skill-card locked">
           <div class="skill-header">
-            <h4 class="skill-name">{{ skill.name }}</h4>
+            <h4 class="skill-name">{{ getSkillName(skill.id, skill.name) }}</h4>
               <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
               <span class="skill-element" :class="skill.element">
                 {{ 
@@ -266,7 +272,7 @@ function unlockSkill(skillId: string) {
       <div v-if="filteredSkills.length > 0" class="skill-grid">
         <div v-for="skill in filteredSkills" :key="skill.id" class="skill-card all">
           <div class="skill-header">
-            <h4 class="skill-name">{{ skill.name }}</h4>
+            <h4 class="skill-name">{{ getSkillName(skill.id, skill.name) }}</h4>
               <Tooltip :content="elementDescriptions[skill.element as (Element | 'neutral')]" position="top" :delay="200">
               <span class="skill-element" :class="skill.element">
                 {{ 

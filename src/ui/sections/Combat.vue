@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import type { CombatSystem, CombatLogEntry } from '../../systems/combat'
 import type { SpellData } from '../../systems/spell'
 import type { ResourceId } from '../../systems/resource'
 
 const game = useGame()
+const { t } = useI18n()
 const combatSystem = ref<CombatSystem | null>(null)
 const isCombatActive = ref(false)
 const combatLog = ref<CombatLogEntry[]>([])
 const selectedSpell = ref<SpellData | null>(null)
+
+function getSpellName(id: string, fallback: string): string {
+  return t(`spell.${id}`, fallback)
+}
+
+function getMonsterName(id: string, fallback: string): string {
+  return t(`monster.${id}`, fallback)
+}
 
 // 检查玩家是否学会攻击法术
 const hasAttackSpell = computed(() => {
@@ -230,7 +240,7 @@ onUnmounted(() => {
         <h3>怪物</h3>
         <div class="monsters-grid">
           <div v-for="monster in monsters" :key="monster.id" class="monster-card">
-            <h4 class="monster-name">{{ monster.name }}</h4>
+            <h4 class="monster-name">{{ getMonsterName(monster.id, monster.name) }}</h4>
             <div class="monster-element">元素: {{ monster.element }}</div>
             <div class="monster-health">
               <div class="health-label">生命值: {{ monster.health }} / {{ monster.maxHealth }}</div>
@@ -260,7 +270,7 @@ onUnmounted(() => {
             :class="{ selected: selectedSpell?.id === spell.id }"
             :disabled="currentTurn !== 'player'"
           >
-            <div class="spell-name">{{ spell.name }}</div>
+            <div class="spell-name">{{ getSpellName(spell.id, spell.name) }}</div>
             <div class="spell-cost">{{ spell.manaCost }} 法力</div>
             <div class="spell-element">{{ spell.element }}</div>
           </button>

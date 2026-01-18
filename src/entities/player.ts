@@ -6,7 +6,8 @@ import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
 import { SimpleClassManager } from '../systems/simpleClass'
-import { ClassManager, createDefaultClassTree } from '../systems/class'
+import { ClassManager } from '../systems/class'
+import { createDefaultClassTree } from '../systems/classData'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -20,7 +21,7 @@ export interface PlayerData {
   achievementManager: AchievementManager
   inventory: Inventory
   simpleClassManager: any
-  classManager: ClassManager
+  classManager: any
 }
 
 export class Player {

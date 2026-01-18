@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { Element } from '../../systems/talent'
-import type { ClassNode } from '../../systems/class'
 
 const game = useGame()
 const player = computed(() => game.player.value)
@@ -18,11 +17,6 @@ const unlockedClasses = computed(() => {
   const classes = player.value.classManager.getUnlockedClasses()
   console.log('[Character] Unlocked classes:', classes)
   return classes
-})
-
-const classTree = computed(() => {
-  if (!player.value?.classManager) return null
-  return player.value.classManager.classTree
 })
 
 // 统计数据

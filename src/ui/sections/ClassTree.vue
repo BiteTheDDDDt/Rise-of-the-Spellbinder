@@ -46,10 +46,11 @@ const tieredNodes = computed(() => {
   if (!classTree.value) return {}
   const tiers: Record<number, ClassNode[]> = {}
   for (const node of allNodes.value) {
-    if (!tiers[node.tier]) {
-      tiers[node.tier] = []
+    const tier = node.tier
+    if (!tiers[tier]) {
+      tiers[tier] = []
     }
-    tiers[node.tier].push(node)
+    tiers[tier].push(node)
   }
   return tiers
 })
@@ -64,13 +65,6 @@ const availableClasses = computed(() => {
     playerState.value.level,
     unlockedClassIds.value
   )
-})
-
-const unlockedNodes = computed(() => {
-  if (!classTree.value) return []
-  return unlockedClassIds.value
-    .map(id => classTree.value.getNode(id))
-    .filter((n): n is ClassNode => n !== undefined)
 })
 
 function initializeNodePositions() {
@@ -229,14 +223,6 @@ function handleWheel(e: WheelEvent) {
 function resetView() {
   zoom.value = 1
   pan.value = { x: 0, y: 0 }
-}
-
-function getSkillMaxBonuses() {
-  return game.player.value?.classManager?.getSkillMaxBonuses() || new Map()
-}
-
-function getUnlockedSkills() {
-  return game.player.value?.classManager?.getUnlockedSkills() || []
 }
 
 const classEffects = computed(() => {

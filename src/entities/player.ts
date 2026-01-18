@@ -5,7 +5,7 @@ import { SkillManager } from '../systems/skill'
 import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
-import SimpleClassManager from '../systems/simpleClass'
+import { SimpleClassManager } from '../systems/simpleClass'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {

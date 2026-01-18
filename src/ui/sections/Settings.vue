@@ -276,37 +276,23 @@ function resetGame() {
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
-  appearance: none;
   outline: none;
 }
 
 .setting-select:hover {
-  background: #333;
+  background: #3a3a3a;
   border-color: #666;
 }
 
 .setting-select:focus {
-  background: #333;
+  background: #3a3a3a;
   border-color: #bb86fc;
   box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
 }
 
 .setting-select option {
-  background: #252525;
+  background: #333;
   color: #e0e0e0;
-  padding: 8px 12px;
-  transition: background 0.15s;
-}
-
-.setting-select option:checked,
-.setting-select option[selected] {
-  background: #bb86fc !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-.setting-select option:hover {
-  background: #444;
 }
 
 .setting-hint {

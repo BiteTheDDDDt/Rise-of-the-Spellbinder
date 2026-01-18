@@ -424,7 +424,6 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   padding: 6px 12px;
   font-size: 0.9rem;
   cursor: pointer;
-  appearance: none;
   outline: none;
 }
 
@@ -442,18 +441,6 @@ watch(() => game.state.hasStarted, (hasStarted) => {
 .lang-select option {
   background: #252525;
   color: #e0e0e0;
-  padding: 8px 12px;
-  transition: background 0.15s;
-}
-
-.lang-select option:checked {
-  background: #bb86fc !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-.lang-select option:hover {
-  background: #444;
 }
 
 .save-buttons {

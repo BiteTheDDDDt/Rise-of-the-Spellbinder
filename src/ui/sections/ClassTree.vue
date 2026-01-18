@@ -35,11 +35,24 @@ const playerState = computed(() => {
   }
 })
 
-const classTree = computed(() => game.player.value?.classManager?.classTree)
+const classTree = computed(() => {
+  const tree = game.player.value?.classManager?.classTree
+  console.log('[ClassTree] Computed classTree:', {
+    exists: !!tree,
+    nodesCount: tree?.nodes?.size || 0,
+    edgesCount: tree?.edges?.size || 0
+  })
+  return tree
+})
 
 const allNodes = computed(() => {
-  if (!classTree.value) return []
-  return Array.from(classTree.value.nodes.values())
+  if (!classTree.value) {
+    console.log('[ClassTree] allNodes: classTree.value is null/undefined')
+    return []
+  }
+  const nodes = Array.from(classTree.value.nodes.values())
+  console.log('[ClassTree] allNodes: computed', nodes.length, 'nodes')
+  return nodes
 })
 
 const tieredNodes = computed(() => {
@@ -55,7 +68,11 @@ const tieredNodes = computed(() => {
   return tiers
 })
 
-const unlockedClassIds = computed(() => playerState.value.unlockedClasses)
+const unlockedClassIds = computed(() => {
+  const ids = playerState.value.unlockedClasses
+  console.log('[ClassTree] unlockedClassIds computed:', ids)
+  return ids
+})
 
 const availableClasses = computed(() => {
   if (!classTree.value) return []

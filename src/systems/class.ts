@@ -338,6 +338,7 @@ export class ClassManager {
   }
 
   setClassTree(classTree: ClassTree) {
+    console.log('[ClassManager] setClassTree called with', classTree.nodes.size, 'nodes')
     this.classTree = classTree
     this.cachedAvailableClasses = []
     this.lastCheckTime = 0

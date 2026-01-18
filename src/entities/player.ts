@@ -93,12 +93,16 @@ export class Player {
 
   private unlockInitialClass() {
     try {
+      console.log('[Player] unlockInitialClass called, classManager:', !!this.data.classManager)
       const apprenticeNode = this.data.classManager.classTree.getNode('apprentice')
+      console.log('[Player] apprenticeNode:', !!apprenticeNode)
       // 通过响应式引用更新，而不是直接修改 classManager 内部数据
       if (apprenticeNode && !this.unlockedClassesRef.value.includes('apprentice')) {
         this.unlockedClassesRef.value.push('apprentice')
         this.data.classManager.classTree.achievements.push('apprentice')
         console.log('[Player] Initial class unlocked: Apprentice')
+      } else {
+        console.log('[Player] Apprentice already unlocked or node not found')
       }
     } catch (error) {
       console.error('[Player] Error unlocking initial class:', error)
@@ -548,10 +552,10 @@ export class Player {
       const classTree = createDefaultClassTree()
       // 不需要 markRaw，因为 ClassTree 内部已经不用 reactive 了
       classManager.setClassTree(classTree)
-      // 恢复响应式的职业解锁列表
-      player.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
+      // 恢复响应式的职业解锁列表（使用 this 而不是 player）
+      this.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
       markRaw(classManager)
-      player.data.classManager = classManager
+      this.data.classManager = classManager
     }
 
     return player

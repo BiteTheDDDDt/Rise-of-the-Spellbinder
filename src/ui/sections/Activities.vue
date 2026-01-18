@@ -10,7 +10,8 @@ const activities = ref<ActivityData[]>([])
 // Load activities data
 onMounted(async () => {
   try {
-    const response = await fetch('/data/activities.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const response = await fetch(`${basePath}data/activities.json`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }

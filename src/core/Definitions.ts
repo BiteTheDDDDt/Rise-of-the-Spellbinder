@@ -64,29 +64,33 @@ class DefinitionsManager {
     if (this.loaded) return true
     
     try {
+      // Get the base path for GitHub Pages deployment
+      const basePath = import.meta.env.BASE_URL || '/'
+      console.log('[Definitions] Loading from base path:', basePath)
+
       // Load item definitions first (needed for shops)
-      const itemResponse = await fetch('/data/items.json')
+      const itemResponse = await fetch(`${basePath}data/items.json`)
       const itemData = await itemResponse.json()
       this.itemDefinitions = itemData.items || []
       itemManager.registerDefinitions(this.itemDefinitions)
 
       // Load skill definitions
-      const skillResponse = await fetch('/data/skills.json')
+      const skillResponse = await fetch(`${basePath}data/skills.json`)
       const skillData = await skillResponse.json()
       this.skillDefinitions = skillData.skills || []
 
       // Load spell definitions
-      const spellResponse = await fetch('/data/spells.json')
+      const spellResponse = await fetch(`${basePath}data/spells.json`)
       const spellData = await spellResponse.json()
       this.spellDefinitions = spellData.spells || []
 
       // Load achievement definitions
-      const achievementResponse = await fetch('/data/achievements.json')
+      const achievementResponse = await fetch(`${basePath}data/achievements.json`)
       const achievementData = await achievementResponse.json()
       this.achievementDefinitions = achievementData.achievements || []
 
       // Load shop definitions
-      const shopResponse = await fetch('/data/shops.json')
+      const shopResponse = await fetch(`${basePath}data/shops.json`)
       const shopData = await shopResponse.json()
       this.shopDefinitions = shopData.shops || []
 

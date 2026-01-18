@@ -43,7 +43,8 @@ const initialSpells: Record<Element, string[]> = {
 // 加载法术定义
 onMounted(async () => {
   try {
-    const response = await fetch('/data/spells.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const response = await fetch(`${basePath}data/spells.json`)
     const data = await response.json()
     spellDefinitions.value = data.spells || []
   } catch (error) {

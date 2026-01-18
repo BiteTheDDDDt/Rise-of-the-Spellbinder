@@ -277,6 +277,13 @@ function resetGame() {
   font-size: 14px;
   cursor: pointer;
   outline: none;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .setting-select:hover {
@@ -293,6 +300,14 @@ function resetGame() {
 .setting-select option {
   background: #333;
   color: #e0e0e0;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.setting-select option:hover,
+.setting-select option:checked {
+  background: #bb86fc;
+  color: white;
 }
 
 .setting-hint {

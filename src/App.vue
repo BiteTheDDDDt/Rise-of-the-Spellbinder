@@ -464,6 +464,13 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   font-size: 0.9rem;
   cursor: pointer;
   outline: none;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .lang-select:hover {
@@ -480,6 +487,14 @@ watch(() => game.state.hasStarted, (hasStarted) => {
 .lang-select option {
   background: #252525;
   color: #e0e0e0;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.lang-select option:hover,
+.lang-select option:checked {
+  background: #bb86fc;
+  color: white;
 }
 
 .save-buttons {

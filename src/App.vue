@@ -441,11 +441,36 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   align-items: center;
   gap: 6px;
   transition: background 0.2s, border-color 0.2s;
+  appearance: none;
+  outline: none;
 }
 
 .lang-select:hover {
   background: #333;
   border-color: #666;
+}
+
+.lang-select:focus {
+  background: #333;
+  border-color: #bb86fc;
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
+}
+
+.lang-select option {
+  background: #252525;
+  color: #e0e0e0;
+  padding: 8px 12px;
+}
+
+.lang-select option:checked,
+.lang-select option[selected] {
+  background: #bb86fc;
+  color: white;
+  font-weight: bold;
+}
+
+.lang-select option:hover {
+  background: #333;
 }
 
 .save-buttons {

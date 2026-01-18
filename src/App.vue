@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useGame } from './core/useGame'
-import { saveSystem } from './core'
-import { ref, watch, watchEffect } from 'vue'
+import { saveSystem, definitionsManager } from './core'
+
+import { ref, watch, watchEffect, onMounted } from 'vue'
 import ResourceBar from './ui/components/ResourceBar.vue'
 import Activities from './ui/sections/Activities.vue'
 import Skills from './ui/sections/Skills.vue'
@@ -15,6 +16,8 @@ import Settings from './ui/sections/Settings.vue'
 import GameLog from './ui/components/GameLog.vue'
 import Explore from './ui/sections/Explore.vue'
 import Combat from './ui/sections/Combat.vue'
+import Inventory from './ui/sections/Inventory.vue'
+import Shop from './ui/sections/Shop.vue'
 import { setLocale } from './i18n'
 import { logSystem } from './systems/log'
 
@@ -27,13 +30,8 @@ const languages = [
 ]
 
 watch(locale, (newLocale) => {
-  const startTime = performance.now()
-  console.log(`[Locale] Switching to ${newLocale} at ${startTime}`)
-  
   try {
     setLocale(newLocale as 'en-US' | 'zh-CN')
-    const endTime = performance.now()
-    console.log(`[Locale] Immediate switch completed in ${endTime - startTime}ms`)
   } catch (error) {
     console.error('[Locale] Failed to set locale:', error)
   }
@@ -65,6 +63,8 @@ const updateMenuItems = () => {
     { id: 'combat', icon: '⚔️', label: '战斗' },
     { id: 'character', icon: '👤', label: '角色' },
     { id: 'achievements', icon: '🏆', label: '成就' },
+    { id: 'inventory', icon: '🎒', label: '背包' },
+    { id: 'shop', icon: '🏪', label: '商店' },
     { id: 'settings', icon: '⚙️', label: '设置' }
   ]
   
@@ -97,6 +97,31 @@ const updateMenuItems = () => {
 }
 
 watchEffect(updateMenuItems)
+
+// 加载游戏定义并尝试加载存档
+onMounted(async () => {
+  try {
+    // 禁用自动加载，等待定义加载完成
+    saveSystem.disableAutoLoad()
+    
+    // 加载所有定义
+    const loaded = await definitionsManager.loadAllDefinitions()
+    if (!loaded) {
+      console.error('Failed to load game definitions')
+      return
+    }
+    
+    // 定义加载完成后，尝试加载存档
+    if (saveSystem.hasSave()) {
+      saveSystem.loadFromLocalStorage()
+    }
+    
+    // 重新启用自动加载
+    saveSystem.enableAutoLoad()
+  } catch (error) {
+    console.error('Failed to initialize game:', error)
+  }
+})
 
 function handleSave() {
   saveSystem.saveToLocalStorage()
@@ -253,6 +278,12 @@ watch(() => game.state.hasStarted, (hasStarted) => {
             </div>
             <div v-else-if="activeMenu === 'combat'" class="combat">
               <Combat />
+            </div>
+            <div v-else-if="activeMenu === 'inventory'" class="inventory">
+              <Inventory />
+            </div>
+            <div v-else-if="activeMenu === 'shop'" class="shop">
+              <Shop />
             </div>
             <div v-else-if="activeMenu === 'settings'" class="settings">
               <Settings />

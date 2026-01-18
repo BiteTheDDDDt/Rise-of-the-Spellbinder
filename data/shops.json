@@ -1,0 +1,103 @@
+{
+  "shops": [
+    {
+      "id": "general_store",
+      "name": "杂货店",
+      "description": "出售基础消耗品和材料。",
+      "itemTypes": ["consumable", "material"],
+      "priceMultiplier": 1.0,
+      "sellMultiplier": 0.5,
+      "refreshInterval": 10,
+      "items": [
+        {
+          "itemId": "potion_mana",
+          "price": 60,
+          "stock": 5,
+          "maxStock": 10
+        },
+        {
+          "itemId": "potion_health",
+          "price": 40,
+          "stock": 5,
+          "maxStock": 10
+        },
+        {
+          "itemId": "herb_firebloom",
+          "price": 15,
+          "stock": 20,
+          "maxStock": 50
+        },
+        {
+          "itemId": "crystal_mana",
+          "price": 30,
+          "stock": 10,
+          "maxStock": 30
+        }
+      ]
+    },
+    {
+      "id": "book_store",
+      "name": "书店",
+      "description": "出售法术书和技能书。",
+      "itemTypes": ["book"],
+      "priceMultiplier": 1.2,
+      "sellMultiplier": 0.4,
+      "refreshInterval": 30,
+      "items": [
+        {
+          "itemId": "book_fire_intro",
+          "price": 250,
+          "stock": 3,
+          "maxStock": 5
+        },
+        {
+          "itemId": "book_elemental_theory",
+          "price": 600,
+          "stock": 2,
+          "maxStock": 3
+        },
+        {
+          "itemId": "book_skill_meditation",
+          "price": 360,
+          "stock": 3,
+          "maxStock": 5
+        }
+      ]
+    },
+    {
+      "id": "equipment_store",
+      "name": "装备店",
+      "description": "出售基础装备。",
+      "itemTypes": ["equipment"],
+      "priceMultiplier": 1.1,
+      "sellMultiplier": 0.6,
+      "refreshInterval": 20,
+      "items": [
+        {
+          "itemId": "staff_apprentice",
+          "price": 180,
+          "stock": 2,
+          "maxStock": 4
+        },
+        {
+          "itemId": "ring_fire",
+          "price": 360,
+          "stock": 1,
+          "maxStock": 2
+        },
+        {
+          "itemId": "robe_meditation",
+          "price": 600,
+          "stock": 1,
+          "maxStock": 2
+        },
+        {
+          "itemId": "amulet_protection",
+          "price": 480,
+          "stock": 1,
+          "maxStock": 2
+        }
+      ]
+    }
+  ]
+}

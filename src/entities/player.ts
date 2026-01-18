@@ -4,6 +4,7 @@ import { ResourceManager, type ResourceId } from '../systems/resource'
 import { SkillManager } from '../systems/skill'
 import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
+import { Inventory } from '../systems/inventory'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -15,6 +16,7 @@ export interface PlayerData {
   skillManager: SkillManager
   spellManager: SpellManager
   achievementManager: AchievementManager
+  inventory: Inventory
 }
 
 export class Player {
@@ -26,6 +28,7 @@ export class Player {
     const achievementManager = new AchievementManager()
     const skillManager = new SkillManager(achievementManager)
     const spellManager = new SpellManager(achievementManager)
+    const inventory = new Inventory()
     
     this.data = reactive({
       name,
@@ -35,7 +38,8 @@ export class Player {
       resourceManager,
       skillManager,
       spellManager,
-      achievementManager
+      achievementManager,
+      inventory
     })
 
     this.applyTalentBonuses()
@@ -94,6 +98,10 @@ export class Player {
     return this.data.achievementManager
   }
 
+  get inventory(): Inventory {
+    return this.data.inventory
+  }
+
   addExperience(amount: number) {
     this.data.experience += amount
     const required = this.getExperienceRequiredForNextLevel()
@@ -121,6 +129,36 @@ export class Player {
   update(deltaSeconds: number) {
     this.data.resourceManager.update(deltaSeconds)
     this.data.spellManager.update(deltaSeconds)
+    
+    // 应用技能提供的魔力恢复加成
+    this.applySkillManaRegen(deltaSeconds)
+  }
+
+  private applySkillManaRegen(deltaSeconds: number) {
+    if (!this.data.skillManager || !this.data.resourceManager) return
+    
+    const stats = this.getSkillStats()
+    
+    // 通用魔力恢复加成（冥想技能）
+    if (stats.manaRegenBonus > 0) {
+      const manaResources = ['mana_fire', 'mana_water', 'mana_earth', 'mana_wind'] as const
+      for (const resourceId of manaResources) {
+        const resource = this.data.resourceManager.getResource(resourceId)
+        if (resource) {
+          const gain = stats.manaRegenBonus * deltaSeconds
+          resource.add(gain)
+        }
+      }
+    }
+    
+    // 水魔力恢复加成（水流操控技能）
+    if (stats.waterManaRegen > 0) {
+      const waterResource = this.data.resourceManager.getResource('mana_water')
+      if (waterResource) {
+        const gain = stats.waterManaRegen * deltaSeconds
+        waterResource.add(gain)
+      }
+    }
   }
 
   toJSON() {
@@ -132,11 +170,206 @@ export class Player {
       resources: this.data.resourceManager.toJSON(),
       skills: this.data.skillManager.toJSON(),
       spells: this.data.spellManager.toJSON(),
-      achievements: this.data.achievementManager.toJSON()
+      achievements: this.data.achievementManager.toJSON(),
+      inventory: this.data.inventory.toJSON()
     }
   }
 
-  static fromJSON(data: any, skillDefinitions?: any[], spellDefinitions?: any[], achievementDefinitions?: any[]): Player {
+  getEquipmentStats() {
+    const stats = {
+      spellPower: 0,
+      elementDamage: {
+        fire: 0,
+        water: 0,
+        earth: 0,
+        wind: 0
+      },
+      manaRegen: 0,
+      damageReduction: 0
+    }
+
+    const equipment = this.data.inventory.equipment
+    const equipmentItems = [equipment.weapon, equipment.armor, equipment.accessory1, equipment.accessory2]
+    
+    for (const item of equipmentItems) {
+      if (!item) continue
+      for (const effect of item.effects) {
+        switch (effect.type) {
+          case 'spell_power':
+            stats.spellPower += effect.value
+            break
+          case 'element_damage':
+            if (effect.target && stats.elementDamage.hasOwnProperty(effect.target)) {
+              stats.elementDamage[effect.target as keyof typeof stats.elementDamage] += effect.value
+            }
+            break
+          case 'mana_regen':
+            stats.manaRegen += effect.value
+            break
+          case 'damage_reduction':
+            stats.damageReduction += effect.value
+            break
+        }
+      }
+    }
+    
+    return stats
+  }
+
+  getSkillStats() {
+    const stats = {
+      // 基础属性
+      spellPower: 0,
+      elementDamage: {
+        fire: 0,
+        water: 0,
+        earth: 0,
+        wind: 0
+      },
+      manaRegen: 0,
+      damageReduction: 0,
+      // 技能特有属性
+      spellCastSpeed: 0,
+      cooldownReduction: 0,
+      // 元素属性
+      fireSpellPower: 0,
+      fireManaCapacity: 0,
+      fireManaEfficiency: 0,
+      fireDamageReduction: 0,
+      waterHealingPower: 0,
+      waterEffectDuration: 0,
+      waterCastSpeed: 0,
+      waterManaRegen: 0,
+      earthDefense: 0,
+      earthDurability: 0,
+      physicalDefense: 0,
+      windSpeed: 0,
+      windEvasion: 0,
+      // 通用属性
+      manaRegenBonus: 0
+    }
+
+    if (!this.data.skillManager) return stats
+    
+    const skills = this.data.skillManager.getAllSkills()
+    for (const skill of skills) {
+      // 遍历技能的所有效果类型
+      for (const effect of skill.effects) {
+        const effectValue = skill.getEffectValue(effect.type)
+        switch (effect.type) {
+          // 基础属性映射
+          case 'manaRegenBonus':
+            stats.manaRegenBonus += effectValue
+            stats.manaRegen += effectValue  // 也加到总manaRegen
+            break
+          case 'spellCastSpeed':
+            stats.spellCastSpeed += effectValue
+            break
+          case 'cooldownReduction':
+            stats.cooldownReduction += effectValue
+            break
+          // 火元素
+          case 'fireSpellPower':
+          case 'fireSpellDamage':
+            stats.fireSpellPower += effectValue
+            stats.elementDamage.fire += effectValue
+            break
+          case 'fireManaCapacity':
+            stats.fireManaCapacity += effectValue
+            break
+          case 'fireManaEfficiency':
+            stats.fireManaEfficiency += effectValue
+            break
+          case 'fireDamageReduction':
+            stats.fireDamageReduction += effectValue
+            stats.damageReduction += effectValue
+            break
+          // 水元素
+          case 'waterSpellPower':
+            stats.elementDamage.water += effectValue
+            break
+          case 'waterHealingPower':
+            stats.waterHealingPower += effectValue
+            break
+          case 'waterEffectDuration':
+            stats.waterEffectDuration += effectValue
+            break
+          case 'waterCastSpeed':
+            stats.waterCastSpeed += effectValue
+            break
+          case 'waterManaRegen':
+            stats.waterManaRegen += effectValue
+            stats.manaRegen += effectValue
+            break
+          case 'waterManaCapacity':
+            // 需要单独处理资源容量
+            break
+          // 土元素
+          case 'earthSpellPower':
+            stats.elementDamage.earth += effectValue
+            break
+          case 'earthDefense':
+            stats.earthDefense += effectValue
+            break
+          case 'earthDurability':
+            stats.earthDurability += effectValue
+            break
+          case 'physicalDefense':
+            stats.physicalDefense += effectValue
+            stats.damageReduction += effectValue
+            break
+          // 风元素
+          case 'windSpellPower':
+            stats.elementDamage.wind += effectValue
+            break
+          case 'windSpeed':
+            stats.windSpeed += effectValue
+            break
+          case 'windEvasion':
+            stats.windEvasion += effectValue
+            break
+        }
+      }
+    }
+    
+    return stats
+  }
+
+  getTotalStats() {
+    const equipmentStats = this.getEquipmentStats()
+    const skillStats = this.getSkillStats()
+    
+    return {
+      spellPower: equipmentStats.spellPower + skillStats.spellPower,
+      elementDamage: {
+        fire: equipmentStats.elementDamage.fire + skillStats.elementDamage.fire,
+        water: equipmentStats.elementDamage.water + skillStats.elementDamage.water,
+        earth: equipmentStats.elementDamage.earth + skillStats.elementDamage.earth,
+        wind: equipmentStats.elementDamage.wind + skillStats.elementDamage.wind
+      },
+      manaRegen: equipmentStats.manaRegen + skillStats.manaRegen,
+      damageReduction: equipmentStats.damageReduction + skillStats.damageReduction,
+      // 技能特有属性（仅来自技能）
+      spellCastSpeed: skillStats.spellCastSpeed,
+      cooldownReduction: skillStats.cooldownReduction,
+      fireSpellPower: skillStats.fireSpellPower,
+      fireManaCapacity: skillStats.fireManaCapacity,
+      fireManaEfficiency: skillStats.fireManaEfficiency,
+      fireDamageReduction: skillStats.fireDamageReduction,
+      waterHealingPower: skillStats.waterHealingPower,
+      waterEffectDuration: skillStats.waterEffectDuration,
+      waterCastSpeed: skillStats.waterCastSpeed,
+      waterManaRegen: skillStats.waterManaRegen,
+      earthDefense: skillStats.earthDefense,
+      earthDurability: skillStats.earthDurability,
+      physicalDefense: skillStats.physicalDefense,
+      windSpeed: skillStats.windSpeed,
+      windEvasion: skillStats.windEvasion,
+      manaRegenBonus: skillStats.manaRegenBonus
+    }
+  }
+
+  static fromJSON(data: any, skillDefinitions?: any[], spellDefinitions?: any[], achievementDefinitions?: any[], itemManager?: any): Player {
     const player = new Player(data.name)
     player.data.level = data.level || 1
     player.data.experience = data.experience || 0
@@ -157,6 +390,11 @@ export class Player {
       player.data.spellManager = SpellManager.fromJSON(data.spells, spellDefinitions)
       // Update spell manager's achievement manager reference
       player.data.spellManager.achievementManager = player.data.achievementManager
+    }
+    
+    // Load inventory if data exists
+    if (data.inventory && itemManager) {
+      player.data.inventory = Inventory.fromJSON(data.inventory, itemManager)
     }
     
     player.applyTalentBonuses()

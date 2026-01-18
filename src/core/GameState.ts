@@ -18,20 +18,30 @@ export class GameState {
   data: GameStateData
 
   constructor(initialData?: Partial<GameStateData>) {
-    const defaultPlayer = new Player('Apprentice')
-    const defaultActivityRunner = new ActivityRunner(defaultPlayer.achievementManager, defaultPlayer.resourceManager)
-    
-    this.data = reactive({
-      gameTime: 0,
-      isPaused: false,
-      lastUpdate: Date.now(),
-      player: defaultPlayer,
-      activityRunner: defaultActivityRunner,
-      hasStarted: false,
-      ...initialData
-    }) as GameStateData
+    try {
+      console.log('[GameState] Creating default player...')
+      const defaultPlayer = new Player('Apprentice')
+      console.log('[GameState] Player created successfully')
+      
+      const defaultActivityRunner = new ActivityRunner(defaultPlayer.achievementManager, defaultPlayer.resourceManager)
+      console.log('[GameState] ActivityRunner created successfully')
+      
+      this.data = reactive({
+        gameTime: 0,
+        isPaused: false,
+        lastUpdate: Date.now(),
+        player: defaultPlayer,
+        activityRunner: defaultActivityRunner,
+        hasStarted: false,
+        ...initialData
+      }) as GameStateData
 
-    this.setupActivityCallbacks()
+      this.setupActivityCallbacks()
+      console.log('[GameState] Initialization complete')
+    } catch (error) {
+      console.error('[GameState] Critical error during initialization:', error)
+      throw error
+    }
   }
 
   private setupActivityCallbacks() {

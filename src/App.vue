@@ -110,9 +110,16 @@ onMounted(async () => {
     
     // 定义加载完成后，尝试加载存档
     if (saveSystem.hasSave()) {
-      const loadSuccess = saveSystem.loadFromLocalStorage()
-      if (!loadSuccess) {
-        console.warn('Failed to load save, starting fresh game')
+      try {
+        const loadSuccess = saveSystem.loadFromLocalStorage()
+        if (!loadSuccess) {
+          console.warn('Failed to load save, starting fresh game')
+          // 清除可能损坏的存档
+          localStorage.removeItem('rise_of_the_spellbinder_save')
+        }
+      } catch (saveError) {
+        console.error('Error loading save, clearing corrupted data:', saveError)
+        localStorage.removeItem('rise_of_the_spellbinder_save')
       }
     }
     
@@ -123,7 +130,9 @@ onMounted(async () => {
     isLoading.value = false
   } catch (error) {
     console.error('Failed to initialize game:', error)
-    alert('Failed to initialize game. Please refresh the page.')
+    // 尝试清除存档并重新加载
+    localStorage.removeItem('rise_of_the_spellbinder_save')
+    isLoading.value = false
   }
 })
 

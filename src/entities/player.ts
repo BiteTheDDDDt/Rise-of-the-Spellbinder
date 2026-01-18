@@ -1,4 +1,4 @@
-import { reactive, markRaw } from 'vue'
+import { reactive, shallowReactive } from 'vue'
 import { Talent } from '../systems/talent'
 import { ResourceManager, type ResourceId } from '../systems/resource'
 import { SkillManager } from '../systems/skill'
@@ -29,21 +29,36 @@ export class Player {
 
   constructor(name: string, talentPreset?: 'fire' | 'water' | 'earth' | 'wind') {
     try {
+      console.log('[Player] Constructor starting...')
       const talent = talentPreset ? Talent.createPreset(talentPreset) : new Talent()
+      console.log('[Player] Talent created')
       const resourceManager = ResourceManager.createDefault()
+      console.log('[Player] ResourceManager created')
       const achievementManager = new AchievementManager()
+      console.log('[Player] AchievementManager created')
       const skillManager = new SkillManager(achievementManager)
+      console.log('[Player] SkillManager created')
       const spellManager = new SpellManager(achievementManager)
+      console.log('[Player] SpellManager created')
       const inventory = new Inventory()
+      console.log('[Player] Inventory created')
       const simpleClassManager = new SimpleClassManager()
-      const classManager = new ClassManager()
-      
-      // 标记 classTree 为非响应式，因为职业树数据量很大且不需要响应式
-      const classTree = createDefaultClassTree()
-      markRaw(classTree)
-      classManager.setClassTree(classTree)
-      simpleClassManager.init()
+      console.log('[Player] SimpleClassManager created')
 
+      console.log('[Player] Creating ClassTree (this may take a moment)...')
+      const classTree = createDefaultClassTree()
+      console.log('[Player] ClassTree created successfully')
+
+      const classManager = new ClassManager()
+      classManager.setClassTree(classTree)
+      // 使用 shallowReactive 保持第一层响应性，但不对深层对象做响应式处理
+      const reactiveClassManager = shallowReactive(classManager)
+      console.log('[Player] ClassManager created and made shallow reactive')
+      
+      simpleClassManager.init()
+      console.log('[Player] SimpleClassManager initialized')
+
+      console.log('[Player] Creating reactive data...')
       this.data = reactive({
         name,
         level:1,
@@ -55,8 +70,9 @@ export class Player {
         achievementManager,
         inventory,
         simpleClassManager,
-        classManager
+        classManager: reactiveClassManager
       })
+      console.log('[Player] Reactive data created')
 
       this.applyTalentBonuses()
 
@@ -506,10 +522,11 @@ export class Player {
     }
 
     if (data.classManager) {
-      player.data.classManager = ClassManager.fromJSON(data.classManager)
+      const classManager = ClassManager.fromJSON(data.classManager)
       const classTree = createDefaultClassTree()
-      markRaw(classTree)
-      player.data.classManager.setClassTree(classTree)
+      // 不需要 markRaw，因为 ClassTree 内部已经不用 reactive 了
+      classManager.setClassTree(classTree)
+      player.data.classManager = shallowReactive(classManager)
     }
 
     return player

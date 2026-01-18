@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+// 不再需要 reactive，使用普通数组避免内存溢出
 import type { Element } from './talent'
 import { logSystem } from './log'
 
@@ -156,7 +156,7 @@ export class ClassTree {
   constructor() {
     this.nodes = new Map()
     this.edges = new Map()
-    this.achievements = reactive([])
+    this.achievements = []  // 移除 reactive，使用普通数组
     console.log('[ClassTree] Constructor called, nodes initialized')
   }
 
@@ -318,7 +318,7 @@ export class ClassManager {
 
   constructor() {
     this.classTree = new ClassTree()
-    this.unlockedClasses = reactive([])
+    this.unlockedClasses = []  // 移除 reactive，使用普通数组
   }
 
   setClassTree(classTree: ClassTree) {

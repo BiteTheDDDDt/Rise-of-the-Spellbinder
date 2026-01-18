@@ -197,32 +197,43 @@ export class ClassTree {
     unlockedClasses: ClassId[],
     customVars: Record<string, any> = {}
   ): ClassNode[] {
-    const available: ClassNode[] = []
+    try {
+      const available: ClassNode[] = []
 
-    for (const node of this.nodes.values()) {
-      if (this.achievements.includes(node.id)) {
-        continue
+      for (const node of this.nodes.values()) {
+        if (this.achievements.includes(node.id)) {
+          continue
+        }
+
+        if (node.isSecret && !this.isSecretNodeRevealed(node.id, unlockedClasses)) {
+          continue
+        }
+
+        const prerequisitesMet = node.prerequisites.every(prereq => unlockedClasses.includes(prereq))
+
+        try {
+          const requirementsMet = node.checkRequirements(
+            playerTalent,
+            playerSkills,
+            playerLevel,
+            unlockedClasses,
+            customVars
+          )
+
+          if (prerequisitesMet && requirementsMet) {
+            available.push(node)
+          }
+        } catch (error) {
+          console.warn('[ClassTree] Error checking requirements for class:', node.id, error)
+          continue
+        }
       }
 
-      if (node.isSecret && !this.isSecretNodeRevealed(node.id, unlockedClasses)) {
-        continue
-      }
-
-      const prerequisitesMet = node.prerequisites.every(prereq => unlockedClasses.includes(prereq))
-      const requirementsMet = node.checkRequirements(
-        playerTalent,
-        playerSkills,
-        playerLevel,
-        unlockedClasses,
-        customVars
-      )
-
-      if (prerequisitesMet && requirementsMet) {
-        available.push(node)
-      }
+      return available.sort((a, b) => a.tier - b.tier)
+    } catch (error) {
+      console.error('[ClassTree] Error in getAvailableClasses:', error)
+      return []
     }
-
-    return available.sort((a, b) => a.tier - b.tier)
   }
 
   private isSecretNodeRevealed(
@@ -239,14 +250,17 @@ export class ClassTree {
   getTreeStructure(): Record<number, ClassNode[]> {
     const tiers: Record<number, ClassNode[]> = {}
 
-    for (const node of this.nodes.values()) {
-      if (!tiers[node.tier]) {
-        tiers[node.tier] = []
+    try {
+      for (const node of this.nodes.values()) {
+        const tier = node.tier
+        if (!tiers[tier]) {
+          tiers[tier] = []
+        }
+        tiers[tier].push(node)
       }
-      const tierArray = tiers[node.tier]
-      if (tierArray) {
-        tierArray.push(node)
-      }
+    } catch (error) {
+      console.error('[ClassTree] Error in getTreeStructure:', error)
+      return {}
     }
 
     return tiers

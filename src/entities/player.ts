@@ -26,29 +26,35 @@ export class Player {
   data: PlayerData
 
   constructor(name: string, talentPreset?: 'fire' | 'water' | 'earth' | 'wind') {
-    const talent = talentPreset ? Talent.createPreset(talentPreset) : new Talent()
-    const resourceManager = ResourceManager.createDefault()
-    const achievementManager = new AchievementManager()
-    const skillManager = new SkillManager(achievementManager)
-    const spellManager = new SpellManager(achievementManager)
-    const inventory = new Inventory()
-    const classManager = new ClassManager()
-    classManager.setClassTree(createDefaultClassTree())
+    try {
+      const talent = talentPreset ? Talent.createPreset(talentPreset) : new Talent()
+      const resourceManager = ResourceManager.createDefault()
+      const achievementManager = new AchievementManager()
+      const skillManager = new SkillManager(achievementManager)
+      const spellManager = new SpellManager(achievementManager)
+      const inventory = new Inventory()
+      const classManager = new ClassManager()
+      const classTree = createDefaultClassTree()
+      classManager.setClassTree(classTree)
 
-    this.data = reactive({
-      name,
-      level: 1,
-      experience: 0,
-      talent,
-      resourceManager,
-      skillManager,
-      spellManager,
-      achievementManager,
-      inventory,
-      classManager
-    })
+      this.data = reactive({
+        name,
+        level: 1,
+        experience: 0,
+        talent,
+        resourceManager,
+        skillManager,
+        spellManager,
+        achievementManager,
+        inventory,
+        classManager
+      })
 
-    this.applyTalentBonuses()
+      this.applyTalentBonuses()
+    } catch (error) {
+      console.error('[Player] Error in constructor:', error)
+      throw error
+    }
   }
 
   applyTalentBonuses() {

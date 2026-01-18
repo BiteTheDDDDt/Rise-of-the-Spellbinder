@@ -9,20 +9,22 @@ const game = useGame()
 const selectedClass = ref<ClassNode | null>(null)
 const showOnlyAvailable = ref(true)
 
-const playerTalent = computed(() => ({
-  fire: game.player.value?.talent.get('fire') || 0,
-  water: game.player.value?.talent.get('water') || 0,
-  earth: game.player.value?.talent.get('earth') || 0,
-  wind: game.player.value?.talent.get('wind') || 0
-}))
+const playerTalent = computed(() => {
+  if (!game.player.value) return { fire: 0, water: 0, earth: 0, wind: 0 }
+  return {
+    fire: game.player.value.talent.get('fire'),
+    water: game.player.value.talent.get('water'),
+    earth: game.player.value.talent.get('earth'),
+    wind: game.player.value.talent.get('wind')
+  }
+})
 
 const playerSkills = computed(() => {
+  if (!game.player.value?.skillManager) return new Map()
   const skills = new Map<string, number>()
-  const skillManager = game.player.value?.skillManager
-  if (skillManager) {
-    for (const skill of skillManager.getAllSkills()) {
-      skills.set(skill.id, skill.currentLevel)
-    }
+  const skillManager = game.player.value.skillManager
+  for (const skill of skillManager.getAllSkills()) {
+    skills.set(skill.id, skill.currentLevel)
   }
   return skills
 })
@@ -84,74 +86,83 @@ function getClassNodeColor(element: Element | undefined): string {
 function unlockClass() {
   if (!selectedClass.value || !game.player.value?.classManager) return
 
-  const success = game.player.value.classManager.unlockClass(
-    selectedClass.value.id,
-    playerTalent.value,
-    playerSkills.value,
-    playerLevel.value,
-    playerGold.value
-  )
+  try {
+    const success = game.player.value.classManager.unlockClass(
+      selectedClass.value.id,
+      playerTalent.value,
+      playerSkills.value,
+      playerLevel.value,
+      playerGold.value
+    )
 
-  if (success) {
-    const cost = selectedClass.value.costs.gold || 0
-    if (cost > 0) {
-      game.player.value.resourceManager.getResource('gold')?.add(-cost)
+    if (success) {
+      const cost = selectedClass.value.costs.gold || 0
+      if (cost > 0) {
+        game.player.value.resourceManager.getResource('gold')?.add(-cost)
+      }
     }
+  } catch (error) {
+    console.error('[Classes] Error unlocking class:', error)
   }
 }
 
 function getMissingRequirements(node: ClassNode): string[] {
-  const missing: string[] = []
+  try {
+    const missing: string[] = []
 
-  for (const req of node.requirements) {
-    let met = false
+    for (const req of node.requirements) {
+      let met = false
 
-    switch (req.type) {
-      case 'talent':
-        if (req.target && req.value !== undefined) {
-          met = playerTalent.value[req.target as Element] >= req.value
-          if (!met) {
-            missing.push(`天赋 ${req.target} 需要达到 ${req.value}`)
+      switch (req.type) {
+        case 'talent':
+          if (req.target && req.value !== undefined) {
+            met = playerTalent.value[req.target as Element] >= req.value
+            if (!met) {
+              missing.push(`天赋 ${req.target} 需要达到 ${req.value}`)
+            }
           }
-        }
-        break
+          break
 
-      case 'skill':
-        if (req.target && req.value !== undefined) {
-          const skillLevel = playerSkills.value.get(req.target) || 0
-          met = skillLevel >= req.value
-          if (!met) {
-            missing.push(`技能 ${req.target} 需要达到等级 ${req.value}`)
+        case 'skill':
+          if (req.target && req.value !== undefined) {
+            const skillLevel = playerSkills.value.get(req.target) || 0
+            met = skillLevel >= req.value
+            if (!met) {
+              missing.push(`技能 ${req.target} 需要达到等级 ${req.value}`)
+            }
           }
-        }
-        break
+          break
 
-      case 'level':
-        if (req.value !== undefined) {
-          met = playerLevel.value >= req.value
-          if (!met) {
-            missing.push(`角色等级需要达到 ${req.value}`)
+        case 'level':
+          if (req.value !== undefined) {
+            met = playerLevel.value >= req.value
+            if (!met) {
+              missing.push(`角色等级需要达到 ${req.value}`)
+            }
           }
-        }
-        break
+          break
 
-      case 'previous_class':
-        if (req.target) {
-          met = unlockedClasses.value.includes(req.target)
-          if (!met) {
-            const prereqNode = classTree.value?.getNode(req.target)
-            missing.push(`需要先解锁职业: ${prereqNode?.name || req.target}`)
+        case 'previous_class':
+          if (req.target) {
+            met = unlockedClasses.value.includes(req.target)
+            if (!met) {
+              const prereqNode = classTree.value?.getNode(req.target)
+              missing.push(`需要先解锁职业: ${prereqNode?.name || req.target}`)
+            }
           }
-        }
-        break
+          break
+      }
     }
-  }
 
-  if (node.costs.gold && playerGold.value < node.costs.gold) {
-    missing.push(`金币不足，需要 ${node.costs.gold}`)
-  }
+    if (node.costs.gold && playerGold.value < node.costs.gold) {
+      missing.push(`金币不足，需要 ${node.costs.gold}`)
+    }
 
-  return missing
+    return missing
+  } catch (error) {
+    console.error('[Classes] Error in getMissingRequirements:', error)
+    return ['计算需求时出错']
+  }
 }
 </script>
 

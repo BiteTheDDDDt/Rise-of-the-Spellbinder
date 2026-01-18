@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useGame } from './core/useGame'
 import { saveSystem, definitionsManager } from './core'
-import { setLocale as setI18nLocale, getLocale } from './i18n'
+import { setLocale as setI18nLocale } from './i18n'
 
 import { ref, watch, watchEffect, onMounted } from 'vue'
 import ResourceBar from './ui/components/ResourceBar.vue'
@@ -29,9 +29,6 @@ const languages = [
   { code: 'zh-CN', label: '中文' }
 ]
 
-// Initialize locale from localStorage
-const savedLocale = ref<string>(getLocale())
-
 // Handle language change
 function handleLanguageChange(event: Event) {
   const target = event.target as HTMLSelectElement
@@ -39,7 +36,6 @@ function handleLanguageChange(event: Event) {
   
   // Only update if value actually changed
   if (newLocale && newLocale !== locale.value) {
-    savedLocale.value = newLocale
     setI18nLocale(newLocale)
     console.log(`Language changed to: ${newLocale}`)
   }
@@ -237,7 +233,7 @@ watch(() => game.state.hasStarted, (hasStarted) => {
           </div>
         </div>
         <div class="top-right">
-          <select :value="savedLocale" @change="handleLanguageChange" class="lang-select">
+          <select :value="locale" @change="handleLanguageChange" class="lang-select">
             <option v-for="lang in languages" :key="lang.code" :value="lang.code">
               {{ lang.label }}
             </option>

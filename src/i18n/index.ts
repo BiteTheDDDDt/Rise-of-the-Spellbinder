@@ -9,9 +9,19 @@ export const messages = {
   'zh-CN': zhCN
 }
 
+// Initialize with saved locale or default
+const savedLocale = (() => {
+  try {
+    const saved = localStorage.getItem('locale') as Locale | null
+    return saved && Object.keys(messages).includes(saved) ? saved : 'en-US'
+  } catch {
+    return 'en-US'
+  }
+})()
+
 export const i18n = createI18n({
   legacy: false,
-  locale: 'en-US',
+  locale: savedLocale,
   fallbackLocale: 'en-US',
   messages
 })

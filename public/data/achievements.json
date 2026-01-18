@@ -1,0 +1,276 @@
+{
+  "achievements": [
+    {
+      "id": "first_skill",
+      "name": "初窥门径",
+      "description": "解锁第一个技能",
+      "type": "skill",
+      "category": "beginner",
+      "icon": "📚",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "resource",
+          "resourceId": "mana_all",
+          "amount": 100
+        }
+      ],
+      "condition": {
+        "type": "skill_unlock",
+        "target": "any",
+        "required": 1
+      }
+    },
+    {
+      "id": "skill_master",
+      "name": "技能大师",
+      "description": "解锁10个技能",
+      "type": "skill",
+      "category": "skill",
+      "icon": "🎓",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "skillExpGain",
+          "bonusValue": 10
+        }
+      ],
+      "condition": {
+        "type": "skill_unlock",
+        "target": "any",
+        "required": 10
+      }
+    },
+    {
+      "id": "first_spell",
+      "name": "魔法启蒙",
+      "description": "学习第一个法术",
+      "type": "spell",
+      "category": "beginner",
+      "icon": "✨",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "resource",
+          "resourceId": "mana_all",
+          "amount": 50
+        }
+      ],
+      "condition": {
+        "type": "spell_learn",
+        "target": "any",
+        "required": 1
+      }
+    },
+    {
+      "id": "spell_collector",
+      "name": "法术收藏家",
+      "description": "学习5个法术",
+      "type": "spell",
+      "category": "spell",
+      "icon": "📖",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "spellPower",
+          "bonusValue": 5
+        }
+      ],
+      "condition": {
+        "type": "spell_learn",
+        "target": "any",
+        "required": 5
+      }
+    },
+    {
+      "id": "activity_enthusiast",
+      "name": "活动爱好者",
+      "description": "完成10次活动",
+      "type": "activity",
+      "category": "activity",
+      "icon": "⚡",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "resource",
+          "resourceId": "xp",
+          "amount": 100
+        }
+      ],
+      "condition": {
+        "type": "activity_complete",
+        "target": "any",
+        "required": 10
+      }
+    },
+    {
+      "id": "resource_hoarder",
+      "name": "资源囤积者",
+      "description": "拥有1000点总魔力",
+      "type": "resource",
+      "category": "resource",
+      "icon": "💰",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "manaCapacity",
+          "bonusValue": 10
+        }
+      ],
+      "condition": {
+        "type": "total_mana",
+        "target": "any",
+        "required": 1000
+      }
+    },
+    {
+      "id": "level_10",
+      "name": "十级法师",
+      "description": "达到10级",
+      "type": "misc",
+      "category": "progress",
+      "icon": "⭐",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "unlock",
+          "unlockId": "advanced_spells"
+        }
+      ],
+      "condition": {
+        "type": "player_level",
+        "target": "any",
+        "required": 10
+      }
+    },
+    {
+      "id": "fire_specialist",
+      "name": "火焰专家",
+      "description": "火元素天赋达到50点",
+      "type": "skill",
+      "category": "element",
+      "icon": "🔥",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "firePower",
+          "bonusValue": 15
+        }
+      ],
+      "condition": {
+        "type": "talent_element",
+        "target": "fire",
+        "required": 50
+      }
+    },
+    {
+      "id": "water_specialist",
+      "name": "水流专家",
+      "description": "水元素天赋达到50点",
+      "type": "skill",
+      "category": "element",
+      "icon": "💧",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "waterPower",
+          "bonusValue": 15
+        }
+      ],
+      "condition": {
+        "type": "talent_element",
+        "target": "water",
+        "required": 50
+      }
+    },
+    {
+      "id": "earth_specialist",
+      "name": "大地专家",
+      "description": "土元素天赋达到50点",
+      "type": "skill",
+      "category": "element",
+      "icon": "⛰️",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "earthPower",
+          "bonusValue": 15
+        }
+      ],
+      "condition": {
+        "type": "talent_element",
+        "target": "earth",
+        "required": 50
+      }
+    },
+    {
+      "id": "wind_specialist",
+      "name": "疾风专家",
+      "description": "风元素天赋达到50点",
+      "type": "skill",
+      "category": "element",
+      "icon": "🌪️",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "windPower",
+          "bonusValue": 15
+        }
+      ],
+      "condition": {
+        "type": "talent_element",
+        "target": "wind",
+        "required": 50
+      }
+    },
+    {
+      "id": "time_played_1h",
+      "name": "时光旅者",
+      "description": "游戏时间达到1小时",
+      "type": "time",
+      "category": "time",
+      "icon": "⏰",
+      "hidden": false,
+      "rewards": [
+        {
+          "type": "bonus",
+          "bonusType": "timeSpeed",
+          "bonusValue": 5
+        }
+      ],
+      "condition": {
+        "type": "game_time",
+        "target": "seconds",
+        "required": 3600
+      }
+    },
+    {
+      "id": "secret_discoverer",
+      "name": "秘密发现者",
+      "description": "发现一个隐藏成就",
+      "type": "misc",
+      "category": "secret",
+      "icon": "🔍",
+      "hidden": true,
+      "rewards": [
+        {
+          "type": "resource",
+          "resourceId": "xp",
+          "amount": 500
+        }
+      ],
+      "condition": {
+        "type": "hidden_achievement",
+        "target": "any",
+        "required": 1
+      }
+    }
+  ]
+}

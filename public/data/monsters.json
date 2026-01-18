@@ -1,0 +1,321 @@
+[
+  {
+    "id": "slime",
+    "name": "史莱姆",
+    "element": "water",
+    "health": 20,
+    "maxHealth": 20,
+    "attack": 5,
+    "defense": 2,
+    "spells": ["water_splash"],
+    "drops": {
+      "gold": "1~3",
+      "experience": "5~10",
+      "items": ["slime_jelly"]
+    },
+    "level": 1
+  },
+  {
+    "id": "rat",
+    "name": "巨鼠",
+    "element": "earth",
+    "health": 15,
+    "maxHealth": 15,
+    "attack": 8,
+    "defense": 1,
+    "spells": ["bite"],
+    "drops": {
+      "gold": "1~2",
+      "experience": "3~8",
+      "items": ["rat_tail"]
+    },
+    "level": 1
+  },
+  {
+    "id": "goblin_scout",
+    "name": "哥布林侦察兵",
+    "element": "neutral",
+    "health": 25,
+    "maxHealth": 25,
+    "attack": 10,
+    "defense": 3,
+    "spells": ["quick_strike"],
+    "drops": {
+      "gold": "2~5",
+      "experience": "8~15",
+      "items": ["goblin_ear"]
+    },
+    "level": 2
+  },
+  {
+    "id": "stone_golem",
+    "name": "石傀儡",
+    "element": "earth",
+    "health": 50,
+    "maxHealth": 50,
+    "attack": 15,
+    "defense": 10,
+    "spells": ["rock_throw", "earth_quake"],
+    "drops": {
+      "gold": "5~10",
+      "experience": "20~30",
+      "mana_earth": "2~5",
+      "items": ["stone_core"]
+    },
+    "level": 5
+  },
+  {
+    "id": "cave_bat",
+    "name": "洞穴蝙蝠",
+    "element": "wind",
+    "health": 30,
+    "maxHealth": 30,
+    "attack": 12,
+    "defense": 2,
+    "spells": ["sonic_screech"],
+    "drops": {
+      "gold": "3~6",
+      "experience": "15~25",
+      "items": ["bat_wing"]
+    },
+    "level": 3
+  },
+  {
+    "id": "earth_elemental",
+    "name": "土元素",
+    "element": "earth",
+    "health": 60,
+    "maxHealth": 60,
+    "attack": 18,
+    "defense": 15,
+    "spells": ["mud_slap", "stone_armor"],
+    "drops": {
+      "gold": "8~15",
+      "experience": "30~45",
+      "mana_earth": "5~8",
+      "items": ["earth_shard"]
+    },
+    "level": 6
+  },
+  {
+    "id": "rock_snake",
+    "name": "岩蛇",
+    "element": "earth",
+    "health": 40,
+    "maxHealth": 40,
+    "attack": 14,
+    "defense": 8,
+    "spells": ["constrict"],
+    "drops": {
+      "gold": "4~8",
+      "experience": "18~28",
+      "mana_earth": "2~4",
+      "items": ["snake_scale"]
+    },
+    "level": 4
+  },
+  {
+    "id": "fire_salamander",
+    "name": "火蜥蜴",
+    "element": "fire",
+    "health": 45,
+    "maxHealth": 45,
+    "attack": 20,
+    "defense": 5,
+    "spells": ["fire_breath"],
+    "drops": {
+      "gold": "6~12",
+      "experience": "25~40",
+      "mana_fire": "3~6",
+      "items": ["salamander_scale"]
+    },
+    "level": 7
+  },
+  {
+    "id": "lava_elemental",
+    "name": "熔岩元素",
+    "element": "fire",
+    "health": 70,
+    "maxHealth": 70,
+    "attack": 25,
+    "defense": 12,
+    "spells": ["lava_burst", "heat_wave"],
+    "drops": {
+      "gold": "10~20",
+      "experience": "40~60",
+      "mana_fire": "8~12",
+      "items": ["lava_core"]
+    },
+    "level": 8
+  },
+  {
+    "id": "fire_bat",
+    "name": "火焰蝙蝠",
+    "element": "fire",
+    "health": 35,
+    "maxHealth": 35,
+    "attack": 16,
+    "defense": 3,
+    "spells": ["fire_screech"],
+    "drops": {
+      "gold": "5~9",
+      "experience": "20~35",
+      "mana_fire": "2~5",
+      "items": ["fiery_wing"]
+    },
+    "level": 6
+  },
+  {
+    "id": "magma_worm",
+    "name": "熔岩蠕虫",
+    "element": "fire",
+    "health": 55,
+    "maxHealth": 55,
+    "attack": 22,
+    "defense": 9,
+    "spells": ["magma_spit"],
+    "drops": {
+      "gold": "8~15",
+      "experience": "35~50",
+      "mana_fire": "5~9",
+      "items": ["magma_chunk"]
+    },
+    "level": 7
+  },
+  {
+    "id": "swamp_slime",
+    "name": "沼泽史莱姆",
+    "element": "water",
+    "health": 40,
+    "maxHealth": 40,
+    "attack": 12,
+    "defense": 6,
+    "spells": ["toxic_splash"],
+    "drops": {
+      "gold": "4~8",
+      "experience": "18~30",
+      "mana_water": "2~4",
+      "items": ["toxic_slime"]
+    },
+    "level": 4
+  },
+  {
+    "id": "water_elemental",
+    "name": "水元素",
+    "element": "water",
+    "health": 65,
+    "maxHealth": 65,
+    "attack": 20,
+    "defense": 10,
+    "spells": ["water_blast", "healing_wave"],
+    "drops": {
+      "gold": "9~18",
+      "experience": "35~55",
+      "mana_water": "6~10",
+      "items": ["water_orb"]
+    },
+    "level": 7
+  },
+  {
+    "id": "bog_monster",
+    "name": "沼泽怪物",
+    "element": "water",
+    "health": 50,
+    "maxHealth": 50,
+    "attack": 18,
+    "defense": 8,
+    "spells": ["mud_grab"],
+    "drops": {
+      "gold": "7~13",
+      "experience": "30~45",
+      "mana_water": "4~7",
+      "items": ["bog_moss"]
+    },
+    "level": 6
+  },
+  {
+    "id": "marsh_troll",
+    "name": "沼泽巨魔",
+    "element": "water",
+    "health": 75,
+    "maxHealth": 75,
+    "attack": 28,
+    "defense": 14,
+    "spells": ["regenerate", "club_smash"],
+    "drops": {
+      "gold": "12~25",
+      "experience": "45~70",
+      "mana_water": "8~14",
+      "items": ["troll_tusk"]
+    },
+    "level": 9
+  },
+  {
+    "id": "storm_elemental",
+    "name": "风暴元素",
+    "element": "wind",
+    "health": 60,
+    "maxHealth": 60,
+    "attack": 22,
+    "defense": 7,
+    "spells": ["lightning_bolt", "gust"],
+    "drops": {
+      "gold": "10~18",
+      "experience": "40~60",
+      "mana_wind": "7~12",
+      "items": ["storm_core"]
+    },
+    "level": 8
+  },
+  {
+    "id": "wind_wyvern",
+    "name": "风翼龙",
+    "element": "wind",
+    "health": 55,
+    "maxHealth": 55,
+    "attack": 25,
+    "defense": 9,
+    "spells": ["wind_slash", "dive_attack"],
+    "drops": {
+      "gold": "9~16",
+      "experience": "38~58",
+      "mana_wind": "6~11",
+      "items": ["wyvern_scale"]
+    },
+    "level": 8
+  },
+  {
+    "id": "thunder_bird",
+    "name": "雷鸟",
+    "element": "wind",
+    "health": 45,
+    "maxHealth": 45,
+    "attack": 20,
+    "defense": 5,
+    "spells": ["thunder_strike"],
+    "drops": {
+      "gold": "7~12",
+      "experience": "30~48",
+      "mana_wind": "4~8",
+      "items": ["thunder_feather"]
+    },
+    "level": 7
+  },
+  {
+    "id": "air_sprite",
+    "name": "空气精灵",
+    "element": "wind",
+    "health": 35,
+    "maxHealth": 35,
+    "attack": 15,
+    "defense": 3,
+    "spells": ["air_dart", "evade"],
+    "drops": {
+      "gold": "5~9",
+      "experience": "22~38",
+      "mana_wind": "3~6",
+      "items": ["essence_of_air"]
+    },
+    "level": 6
+  }
+]

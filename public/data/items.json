@@ -1,0 +1,233 @@
+{
+  "items": [
+    {
+      "id": "potion_mana",
+      "name": "魔力药水",
+      "description": "恢复所有元素魔力至满值。",
+      "type": "consumable",
+      "rarity": "common",
+      "value": 50,
+      "maxStack": 10,
+      "effects": [
+        {
+          "type": "restore_mana",
+          "target": "fire",
+          "value": 999
+        },
+        {
+          "type": "restore_mana",
+          "target": "water",
+          "value": 999
+        },
+        {
+          "type": "restore_mana",
+          "target": "earth",
+          "value": 999
+        },
+        {
+          "type": "restore_mana",
+          "target": "wind",
+          "value": 999
+        }
+      ],
+      "metadata": {
+        "restoreAmount": 999
+      }
+    },
+    {
+      "id": "potion_health",
+      "name": "治疗药水",
+      "description": "恢复生命值。",
+      "type": "consumable",
+      "rarity": "common",
+      "value": 30,
+      "maxStack": 10,
+      "effects": [
+        {
+          "type": "restore_health",
+          "value": 50
+        }
+      ],
+      "metadata": {
+        "restoreAmount": 50
+      }
+    },
+    {
+      "id": "scroll_experience",
+      "name": "经验卷轴",
+      "description": "使用后获得技能经验。",
+      "type": "consumable",
+      "rarity": "uncommon",
+      "value": 100,
+      "maxStack": 5,
+      "effects": [
+        {
+          "type": "add_experience",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "id": "stone_teleport",
+      "name": "传送石",
+      "description": "从战斗中逃脱。",
+      "type": "consumable",
+      "rarity": "rare",
+      "value": 200,
+      "maxStack": 3,
+      "effects": [
+        {
+          "type": "escape_combat",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "staff_apprentice",
+      "name": "学徒法杖",
+      "description": "基础法杖，略微提升法术威力。",
+      "type": "equipment",
+      "rarity": "common",
+      "value": 150,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "spell_power",
+          "value": 5,
+          "formula": "5"
+        }
+      ],
+      "metadata": {
+        "slot": "weapon"
+      }
+    },
+    {
+      "id": "ring_fire",
+      "name": "火焰之戒",
+      "description": "提升火系伤害。",
+      "type": "equipment",
+      "rarity": "uncommon",
+      "value": 300,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "element_damage",
+          "target": "fire",
+          "value": 10,
+          "formula": "10"
+        }
+      ],
+      "metadata": {
+        "slot": "accessory1",
+        "element": "fire"
+      }
+    },
+    {
+      "id": "robe_meditation",
+      "name": "冥想长袍",
+      "description": "提升魔力恢复速度。",
+      "type": "equipment",
+      "rarity": "rare",
+      "value": 500,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "mana_regen",
+          "value": 20,
+          "formula": "20"
+        }
+      ],
+      "metadata": {
+        "slot": "armor"
+      }
+    },
+    {
+      "id": "amulet_protection",
+      "name": "防护护符",
+      "description": "提供少量伤害减免。",
+      "type": "equipment",
+      "rarity": "uncommon",
+      "value": 400,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "damage_reduction",
+          "value": 5,
+          "formula": "5"
+        }
+      ],
+      "metadata": {
+        "slot": "accessory2"
+      }
+    },
+    {
+      "id": "herb_firebloom",
+      "name": "火绒花",
+      "description": "用于制作火焰相关物品的材料。",
+      "type": "material",
+      "rarity": "common",
+      "value": 10,
+      "maxStack": 99
+    },
+    {
+      "id": "crystal_mana",
+      "name": "魔力水晶",
+      "description": "蕴含纯净魔力的水晶。",
+      "type": "material",
+      "rarity": "uncommon",
+      "value": 25,
+      "maxStack": 50
+    },
+    {
+      "id": "book_fire_intro",
+      "name": "《火系入门》",
+      "description": "学习火花法术的入门书籍。",
+      "type": "book",
+      "rarity": "common",
+      "value": 200,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "learn_spell",
+          "target": "spark"
+        }
+      ],
+      "metadata": {
+        "spellId": "spark"
+      }
+    },
+    {
+      "id": "book_elemental_theory",
+      "name": "《元素论》",
+      "description": "深入研究元素魔法，获得研究点。",
+      "type": "book",
+      "rarity": "uncommon",
+      "value": 500,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "add_research",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "id": "book_skill_meditation",
+      "name": "《冥想心法》",
+      "description": "学习冥想技能。",
+      "type": "book",
+      "rarity": "common",
+      "value": 300,
+      "maxStack": 1,
+      "effects": [
+        {
+          "type": "learn_skill",
+          "target": "meditation"
+        }
+      ],
+      "metadata": {
+        "skillId": "meditation"
+      }
+    }
+  ]
+}

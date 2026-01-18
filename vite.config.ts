@@ -6,7 +6,7 @@ import { resolve } from 'path'
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/Rise-of-the-Spellbinder/' : '/',
   plugins: [vue()],
-  publicDir: resolve(__dirname, 'data'),
+  publicDir: 'public',
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
@@ -17,6 +17,11 @@ export default defineConfig({
       '@entities': resolve(__dirname, './src/entities'),
       '@i18n': resolve(__dirname, './src/i18n'),
       '@utils': resolve(__dirname, './src/utils'),
+    }
+  },
+  server: {
+    fs: {
+      allow: ['..']
     }
   }
 })

@@ -58,7 +58,7 @@ watch(menuItems, (newItems, oldItems = []) => {
       { id: 'activities', icon: '⚡', label: t('common.activities') },
       { id: 'skills', icon: '📚', label: t('common.skills') },
       { id: 'spells', icon: '✨', label: t('common.spells') },
-      // { id: 'classes', icon: '🎭', label: '职业' },
+      { id: 'classes', icon: '🎭', label: '职业' },
       { id: 'explore', icon: '🗺️', label: t('common.explore') },
       { id: 'combat', icon: '⚔️', label: t('common.fight') },
       { id: 'character', icon: '👤', label: t('common.character') },
@@ -315,9 +315,9 @@ watch(() => game.state.hasStarted, (hasStarted) => {
             <div v-else-if="activeMenu === 'shop'" class="shop">
               <Shop />
             </div>
-            <!-- <div v-else-if="activeMenu === 'classes'" class="classes">
+            <div v-else-if="activeMenu === 'classes'" class="classes">
               <Classes />
-            </div> -->
+            </div>
             <div v-else-if="activeMenu === 'settings'" class="settings">
               <Settings />
             </div>

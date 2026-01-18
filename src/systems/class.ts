@@ -311,6 +311,8 @@ export class ClassTree {
 export class ClassManager {
   classTree: ClassTree
   unlockedClasses: ClassId[]
+  private cachedAvailableClasses: ClassNode[] = []
+  private lastCheckTime = 0
 
   constructor() {
     this.classTree = new ClassTree()
@@ -319,6 +321,8 @@ export class ClassManager {
 
   setClassTree(classTree: ClassTree) {
     this.classTree = classTree
+    this.cachedAvailableClasses = []
+    this.lastCheckTime = 0
   }
 
   unlockClass(
@@ -329,42 +333,47 @@ export class ClassManager {
     playerGold: number,
     customVars: Record<string, any> = {}
   ): boolean {
-    const node = this.classTree.getNode(classId)
-    if (!node) {
-      console.warn('[ClassManager] Class not found:', classId)
-      return false
-    }
+    try {
+      const node = this.classTree.getNode(classId)
+      if (!node) {
+        console.warn('[ClassManager] Class not found:', classId)
+        return false
+      }
 
-    if (this.unlockedClasses.includes(classId)) {
-      console.warn('[ClassManager] Class already unlocked:', classId)
-      return true
-    }
+      if (this.unlockedClasses.includes(classId)) {
+        console.warn('[ClassManager] Class already unlocked:', classId)
+        return true
+      }
 
-    const prerequisitesMet = node.prerequisites.every(prereq => this.unlockedClasses.includes(prereq))
-    const requirementsMet = node.checkRequirements(
-      playerTalent,
-      playerSkills,
-      playerLevel,
-      this.unlockedClasses,
-      customVars
-    )
+      const prerequisitesMet = node.prerequisites.every(prereq => this.unlockedClasses.includes(prereq))
+      const requirementsMet = node.checkRequirements(
+        playerTalent,
+        playerSkills,
+        playerLevel,
+        this.unlockedClasses,
+        customVars
+      )
 
-    if (!prerequisitesMet || !requirementsMet) {
-      console.warn('[ClassManager] Requirements not met for class:', classId)
-      return false
-    }
+      if (!prerequisitesMet || !requirementsMet) {
+        console.warn('[ClassManager] Requirements not met for class:', classId)
+        return false
+      }
 
       if (node.costs.gold && playerGold < node.costs.gold) {
         console.warn('[ClassManager] Not enough gold for class:', classId)
         return false
       }
 
-    this.unlockedClasses.push(classId)
-    this.classTree.achievements.push(classId)
+      this.unlockedClasses.push(classId)
+      this.classTree.achievements.push(classId)
 
-    logSystem.success(`职业进阶: ${node.name}`, { classId, tier: node.tier })
+      logSystem.success(`职业进阶: ${node.name}`, { classId, tier: node.tier })
 
-    return true
+      return true
+    } catch (error) {
+      console.error('[ClassManager] Error in unlockClass:', error)
+      return false
+    }
   }
 
   canUnlockClass(
@@ -404,6 +413,13 @@ export class ClassManager {
     playerGold: number,
     customVars: Record<string, any> = {}
   ): ClassNode[] {
+    const now = Date.now()
+    const cacheDuration = 500 // Cache for 500ms to prevent excessive recalculation
+
+    if (now - this.lastCheckTime < cacheDuration && this.cachedAvailableClasses.length > 0) {
+      return this.cachedAvailableClasses
+    }
+
     const allAvailable = this.classTree.getAvailableClasses(
       playerTalent,
       playerSkills,
@@ -412,9 +428,12 @@ export class ClassManager {
       customVars
     )
 
-    return allAvailable.filter(node => {
+    this.cachedAvailableClasses = allAvailable.filter(node => {
       return !node.costs.gold || playerGold >= node.costs.gold
     })
+    this.lastCheckTime = now
+
+    return this.cachedAvailableClasses
   }
 
   getClassEffects(): ClassEffect[] {

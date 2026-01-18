@@ -35,9 +35,8 @@ export class Player {
       const inventory = new Inventory()
 
       const classManager = new ClassManager()
-      // Temporarily disable class tree to test performance
-      // const classTree = createDefaultClassTree()
-      // classManager.setClassTree(classTree)
+      const classTree = createDefaultClassTree()
+      classManager.setClassTree(classTree)
 
       this.data = reactive({
         name,

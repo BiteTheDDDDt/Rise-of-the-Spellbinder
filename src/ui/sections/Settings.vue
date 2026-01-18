@@ -280,6 +280,11 @@ function resetGame() {
   outline: none;
 }
 
+.setting-select:hover {
+  background: #333;
+  border-color: #666;
+}
+
 .setting-select:focus {
   background: #333;
   border-color: #bb86fc;
@@ -290,12 +295,13 @@ function resetGame() {
   background: #252525;
   color: #e0e0e0;
   padding: 8px 12px;
+  transition: background 0.15s;
 }
 
 .setting-select option:checked,
 .setting-select option[selected] {
-  background: #bb86fc;
-  color: white;
+  background: #bb86fc !important;
+  color: white !important;
   font-weight: bold;
 }
 

@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import { saveSystem, gameState } from '../../core'
+import { setLocale as setI18nLocale } from '../../i18n'
 import { ref } from 'vue'
 
 const { locale } = useI18n()
@@ -21,6 +22,12 @@ const numberFormats = [
 const selectedNumberFormat = ref('default')
 const autoSaveEnabled = ref(true)
 const autoSaveInterval = ref(30) // 秒
+
+function handleNumberFormatChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newFormat = target.value as 'default' | 'compact' | 'formatted'
+  selectedNumberFormat.value = newFormat
+}
 
 function handleSave() {
   saveSystem.saveToLocalStorage()
@@ -64,6 +71,17 @@ function handleImport(event: Event) {
   input.value = ''
 }
 
+function handleLanguageChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newLocale = target.value as 'en-US' | 'zh-CN'
+  
+  // Only update if value actually changed
+  if (newLocale && newLocale !== locale.value) {
+    setI18nLocale(newLocale)
+    console.log(`Language changed to: ${newLocale}`)
+  }
+}
+
 function resetGame() {
   if (confirm('确定要重置游戏吗？这将删除所有进度并重新开始。此操作不可撤销。')) {
     gameState.reset()
@@ -82,21 +100,27 @@ function resetGame() {
         <h3>🌐 语言</h3>
         <div class="setting-item">
           <label for="language-select">界面语言:</label>
-          <select id="language-select" v-model="locale" class="setting-select">
+          <select id="language-select" :value="locale" @change="handleLanguageChange" class="setting-select">
             <option v-for="lang in languages" :key="lang.code" :value="lang.code">
               {{ lang.label }}
             </option>
           </select>
           <p class="setting-hint">切换游戏界面显示语言。</p>
         </div>
+      </div>
 
       <!-- 显示设置 -->
       <div class="settings-card">
         <h3>📊 显示</h3>
         <div class="setting-item">
           <label for="number-format">数字格式:</label>
-          <select id="number-format" v-model="selectedNumberFormat" class="setting-select">
-            <option v-for="format in numberFormats" :key="format.id" :value="format.id">
+          <select id="number-format" :value="selectedNumberFormat" @change="handleNumberFormatChange" class="setting-select">
+            <option 
+              v-for="format in numberFormats" 
+              :key="format.id" 
+              :value="format.id"
+              :selected="selectedNumberFormat === format.id"
+            >
               {{ format.label }}
             </option>
           </select>
@@ -274,7 +298,8 @@ function resetGame() {
   transition: background 0.15s;
 }
 
-.setting-select option:checked {
+.setting-select option:checked,
+.setting-select option[selected] {
   background: #bb86fc !important;
   color: white !important;
   font-weight: bold;

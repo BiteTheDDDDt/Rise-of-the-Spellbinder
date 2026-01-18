@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import { saveSystem, gameState } from '../../core'
+import { setLocale as setI18nLocale } from '../../i18n'
 import { ref } from 'vue'
 
 const { locale } = useI18n()
@@ -49,7 +50,7 @@ function handleExport() {
 function handleImport(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files?.length) return
-
+  
   const file = input.files[0] as File
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -62,6 +63,17 @@ function handleImport(event: Event) {
   }
   reader.readAsText(file)
   input.value = ''
+}
+
+function handleLanguageChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newLocale = target.value as 'en-US' | 'zh-CN'
+  
+  // Only update if value actually changed
+  if (newLocale && newLocale !== locale.value) {
+    setI18nLocale(newLocale)
+    console.log(`Language changed to: ${newLocale}`)
+  }
 }
 
 function resetGame() {
@@ -82,7 +94,7 @@ function resetGame() {
         <h3>🌐 语言</h3>
         <div class="setting-item">
           <label for="language-select">界面语言:</label>
-          <select id="language-select" v-model="locale" class="setting-select">
+          <select id="language-select" :value="locale" @change="handleLanguageChange" class="setting-select">
             <option v-for="lang in languages" :key="lang.code" :value="lang.code">
               {{ lang.label }}
             </option>
@@ -253,6 +265,31 @@ function resetGame() {
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
+  appearance: none;
+  outline: none;
+}
+
+.setting-select:focus {
+  background: #333;
+  border-color: #bb86fc;
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
+}
+
+.setting-select option {
+  background: #252525;
+  color: #e0e0e0;
+  padding: 8px 12px;
+}
+
+.setting-select option:checked,
+.setting-select option[selected] {
+  background: #bb86fc;
+  color: white;
+  font-weight: bold;
+}
+
+.setting-select option:hover {
+  background: #444;
 }
 
 .setting-hint {

@@ -243,11 +243,13 @@ onMounted(() => {
   }, 100)
 })
 
-watch(() => classTree.value?.nodes.size, () => {
-  setTimeout(() => {
-    initializeNodePositions()
-  }, 100)
-})
+// 暂时禁用 watch 来排查问题
+// watch(() => classTree.value?.nodes.size, () => {
+//   setTimeout(() => {
+//     initializeNodePositions()
+//   }, 100)
+// })
+
 </script>
 
 <template>

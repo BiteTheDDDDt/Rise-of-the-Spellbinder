@@ -174,13 +174,27 @@ export class ClassTree {
   }
 
   addPrerequisite(classId: ClassId, prerequisiteId: ClassId) {
+    // 添加计数器来检测无限循环
+    if (typeof (window as any).__addPrereqCount === 'undefined') {
+      (window as any).__addPrereqCount = 0
+    }
+    const count = ++((window as any).__addPrereqCount)
+
+    if (count > 500) {
+      console.error('[ClassTree] Too many addPrerequisite calls! Breaking to prevent crash. Count:', count)
+      throw new Error('Infinite loop detected in addPrerequisite')
+    }
+
     const node = this.nodes.get(classId)
     if (node) {
       if (!node.data.prerequisites) {
         node.data.prerequisites = []
       }
-      node.data.prerequisites.push(prerequisiteId)
-      this.addEdge(prerequisiteId, classId)
+      // 检查是否已经存在，避免重复添加
+      if (!node.data.prerequisites.includes(prerequisiteId)) {
+        node.data.prerequisites.push(prerequisiteId)
+        this.addEdge(prerequisiteId, classId)
+      }
     }
   }
 

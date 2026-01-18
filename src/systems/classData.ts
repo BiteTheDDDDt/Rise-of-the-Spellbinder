@@ -656,7 +656,8 @@ export function createDefaultClassTree(): ClassTree {
     if (def.prerequisites && def.prerequisites.length > 0) {
       for (const prereq of def.prerequisites) {
         try {
-          console.log(`[classData] Adding prerequisite: ${def.id} <- ${prereq}`)
+          // 暂时注释掉日志，确认是日志问题还是真的无限循环
+          // console.log(`[classData] Adding prerequisite: ${def.id} <- ${prereq}`)
           classTree.addPrerequisite(def.id, prereq)
         } catch (error) {
           console.error(`[classData] ERROR adding prerequisite ${def.id} <- ${prereq}:`, error)

@@ -18,7 +18,6 @@ import Explore from './ui/sections/Explore.vue'
 import Combat from './ui/sections/Combat.vue'
 import Inventory from './ui/sections/Inventory.vue'
 import Shop from './ui/sections/Shop.vue'
-import { setLocale } from './i18n'
 import { logSystem } from './systems/log'
 
 const { t, locale } = useI18n()
@@ -29,17 +28,10 @@ const languages = [
   { code: 'zh-CN', label: '中文' }
 ]
 
-watch(locale, (newLocale) => {
-  try {
-    setLocale(newLocale as 'en-US' | 'zh-CN')
-  } catch (error) {
-    console.error('[Locale] Failed to set locale:', error)
-  }
-})
-
 const activeMenu = ref('activities')
 const menuItems = ref<Array<{id: string, icon: string, label: string}>>([])
 const currentView = ref(game.state.hasStarted ? 'main' : 'start')
+const isLoading = ref(true)
 
 // Watch for menu unlocks
 watch(menuItems, (newItems, oldItems = []) => {
@@ -108,18 +100,26 @@ onMounted(async () => {
     const loaded = await definitionsManager.loadAllDefinitions()
     if (!loaded) {
       console.error('Failed to load game definitions')
+      alert('Failed to load game definitions. Please refresh the page.')
       return
     }
     
     // 定义加载完成后，尝试加载存档
     if (saveSystem.hasSave()) {
-      saveSystem.loadFromLocalStorage()
+      const loadSuccess = saveSystem.loadFromLocalStorage()
+      if (!loadSuccess) {
+        console.warn('Failed to load save, starting fresh game')
+      }
     }
     
     // 重新启用自动加载
     saveSystem.enableAutoLoad()
+    
+    // 设置加载完成
+    isLoading.value = false
   } catch (error) {
     console.error('Failed to initialize game:', error)
+    alert('Failed to initialize game. Please refresh the page.')
   }
 })
 
@@ -188,9 +188,18 @@ watch(() => game.state.hasStarted, (hasStarted) => {
 
 <template>
   <div class="app-container">
+    <!-- 加载界面 -->
+    <div v-if="isLoading" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h2>🧙 {{ t('app.title') }}</h2>
+        <p>正在加载游戏数据...</p>
+      </div>
+    </div>
+    
     <!-- 开始界面 -->
     <StartScreen
-      v-if="currentView === 'start'"
+      v-else-if="currentView === 'start'"
       @startNewGame="showNewGame"
       @continueGame="showMainGame"
     />
@@ -318,6 +327,51 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   height: 100vh;
   background: #121212;
   color: #e0e0e0;
+}
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #121212;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #333;
+  border-top-color: #bb86fc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content h2 {
+  color: #bb86fc;
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+}
+
+.loading-content p {
+  color: #888;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .top-bar {

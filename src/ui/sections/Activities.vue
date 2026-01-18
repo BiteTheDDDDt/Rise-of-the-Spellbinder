@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { ActivityData } from '../../systems/activity'
 import Tooltip from '../components/Tooltip.vue'
@@ -8,9 +8,18 @@ const game = useGame()
 const activities = ref<ActivityData[]>([])
 
 // Load activities data
-fetch('/data/activities.json')
-  .then(res => res.json())
-  .then(data => activities.value = data)
+onMounted(async () => {
+  try {
+    const response = await fetch('/data/activities.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    activities.value = data
+  } catch (error) {
+    console.error('Failed to load activities:', error)
+  }
+})
 
 function startActivity(activity: ActivityData) {
   const success = game.activityRunner.value.startActivity(activity)

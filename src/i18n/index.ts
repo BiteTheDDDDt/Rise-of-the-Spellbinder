@@ -9,19 +9,9 @@ export const messages = {
   'zh-CN': zhCN
 }
 
-// Initialize with saved locale or default
-const savedLocale = (() => {
-  try {
-    const saved = localStorage.getItem('locale') as Locale | null
-    return saved && Object.keys(messages).includes(saved) ? saved : 'en-US'
-  } catch {
-    return 'en-US'
-  }
-})()
-
 export const i18n = createI18n({
   legacy: false,
-  locale: savedLocale,
+  locale: 'en-US',
   fallbackLocale: 'en-US',
   messages
 })
@@ -29,16 +19,23 @@ export const i18n = createI18n({
 export function setLocale(locale: Locale) {
   const start = performance.now()
   i18n.global.locale.value = locale
+  
+  // Save to localStorage synchronously
+  try {
+    localStorage.setItem('locale', locale)
+  } catch (error) {
+    console.error('[setLocale] Failed to save locale to localStorage:', error)
+  }
+  
   const immediateEnd = performance.now()
-  
-  // Save to localStorage asynchronously
-  setTimeout(() => {
-    try {
-      localStorage.setItem('locale', locale)
-    } catch (error) {
-      console.error('[setLocale] Failed to save locale to localStorage:', error)
-    }
-  }, 0)
-  
   console.log(`[setLocale] Set locale to ${locale} in ${immediateEnd - start}ms`)
+}
+
+export function getLocale(): Locale {
+  try {
+    const saved = localStorage.getItem('locale') as Locale | null
+    return saved && Object.keys(messages).includes(saved) ? saved : 'en-US'
+  } catch {
+    return 'en-US'
+  }
 }

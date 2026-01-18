@@ -1,7 +1,15 @@
 import { ClassTree, ClassNode } from './class'
 
+// 缓存已创建的 ClassTree，避免重复创建
+let cachedClassTree: ClassTree | null = null
+
 export function createDefaultClassTree(): ClassTree {
   console.log('[classData] Creating default class tree...')
+  if (cachedClassTree) {
+    console.log('[classData] Returning cached class tree')
+    return cachedClassTree
+  }
+
   const classTree = new ClassTree()
 
   const classDefinitions: any[] = [
@@ -658,5 +666,6 @@ export function createDefaultClassTree(): ClassTree {
   }
 
   console.log('[classData] Class tree created with', classTree.nodes.size, 'nodes')
+  cachedClassTree = classTree
   return classTree
 }

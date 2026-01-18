@@ -55,15 +55,8 @@ export class Player {
       const classManager = new ClassManager()
       classManager.setClassTree(classTree)
 
-      // 标记为非响应式，避免 Vue 深度遍历大型对象
-      console.log('[Player] About to markRaw classManager')
-      try {
-        markRaw(classManager)
-        console.log('[Player] ClassManager marked as non-reactive successfully')
-      } catch (error) {
-        console.error('[Player] ERROR marking classManager as raw:', error)
-        throw error
-      }
+      // 不再标记为 raw，以便响应式系统可以追踪版本变化
+      console.log('[Player] ClassManager created without markRaw')
 
       // 初始化响应式的职业解锁引用
       console.log('[Player] Setting unlockedClassesRef...')
@@ -563,12 +556,10 @@ export class Player {
     if (data.classManager) {
       const classManager = ClassManager.fromJSON(data.classManager)
       const classTree = createDefaultClassTree()
-      // 不需要 markRaw，因为 ClassTree 内部已经不用 reactive 了
       classManager.setClassTree(classTree)
-      // 恢复响应式的职业解锁列表（使用 this 而不是 player）
-      this.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
-      markRaw(classManager)
-      this.data.classManager = classManager
+      // 恢复响应式的职业解锁列表
+      player.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
+      player.data.classManager = classManager
     }
 
     return player

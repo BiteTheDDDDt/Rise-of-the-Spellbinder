@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { ClassNode, ClassId, ClassRequirement, ClassEffect } from '../../systems/class'
 import { logSystem } from '../../systems/log'
 
 const game = useGame()
 const selectedClass = ref<ClassNode | null>(null)
-const zoom = ref(1)
-const pan = ref({ x: 0, y: 0 })
-const isDragging = ref(false)
-const lastMousePos = ref({ x: 0, y: 0 })
+const showDebugInfo = ref(false)
+
+// 搜索和筛选
+const searchQuery = ref('')
+const selectedElement = ref<string>('all')
+const selectedTier = ref<number | 'all'>('all')
+const showSecretClasses = ref(false)
 
 interface NodePosition {
   x: number
@@ -17,6 +20,14 @@ interface NodePosition {
 }
 
 const nodePositions = ref<Map<ClassId, NodePosition>>(new Map())
+
+// 自动缩放相关
+const containerRef = ref<HTMLElement | null>(null)
+const containerSize = ref({ width: 0, height: 0 })
+const zoomScale = ref(1)
+const translateOffset = ref({ x: 0, y: 0 })
+const isAutoZoomEnabled = ref(true)
+let resizeObserver: ResizeObserver | null = null
 
 const playerState = computed(() => {
   const skillMap = new Map<string, number>()
@@ -55,6 +66,56 @@ const allNodes = computed(() => {
   return nodes
 })
 
+const filteredNodes = computed(() => {
+  let filtered = allNodes.value
+  
+  // 搜索筛选
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    filtered = filtered.filter(node => 
+      node.name.toLowerCase().includes(query) || 
+      node.description.toLowerCase().includes(query) ||
+      (node.element && node.element.toLowerCase().includes(query))
+    )
+  }
+  
+  // 元素筛选
+  if (selectedElement.value !== 'all') {
+    filtered = filtered.filter(node => node.element === selectedElement.value)
+  }
+  
+  // 层级筛选
+  if (selectedTier.value !== 'all') {
+    filtered = filtered.filter(node => node.tier === selectedTier.value)
+  }
+  
+  // 隐藏职业筛选
+  if (!showSecretClasses.value) {
+    filtered = filtered.filter(node => !node.isSecret)
+  }
+  
+  return filtered
+})
+
+const availableElements = computed(() => {
+  const elements = new Set<string>()
+  elements.add('all')
+  for (const node of allNodes.value) {
+    if (node.element) {
+      elements.add(node.element)
+    }
+  }
+  return Array.from(elements)
+})
+
+const availableTiers = computed(() => {
+  const tiers = new Set<number>()
+  for (const node of allNodes.value) {
+    tiers.add(node.tier)
+  }
+  return Array.from(tiers).sort((a, b) => a - b)
+})
+
 const tieredNodes = computed(() => {
   if (!classTree.value) return {}
   const tiers: Record<number, ClassNode[]> = {}
@@ -84,12 +145,96 @@ const availableClasses = computed(() => {
   )
 })
 
-function initializeNodePositions() {
-  const tiers = tieredNodes.value
-  const canvas = document.querySelector('.class-tree-canvas') as HTMLElement
-  if (!canvas) return
+const hasNodePositions = computed(() => {
+  return nodePositions.value.size > 0 && allNodes.value.length > 0 && nodePositions.value.size >= allNodes.value.length
+})
 
-  const canvasRect = canvas.getBoundingClientRect()
+const hasClassTree = computed(() => {
+  return !!classTree.value && classTree.value.nodes.size > 0
+})
+
+const canvasSize = computed(() => {
+  let maxX = 0
+  let maxY = 0
+  const nodeWidth = 160
+  const nodeHeight = 80
+  
+  for (const position of nodePositions.value.values()) {
+    maxX = Math.max(maxX, position.x + nodeWidth)
+    maxY = Math.max(maxY, position.y + nodeHeight)
+  }
+  
+  // 添加边距
+  return {
+    width: Math.max(maxX + 50, 800), // 最小宽度
+    height: Math.max(maxY + 50, 600) // 最小高度
+  }
+})
+
+const zoomTransform = computed(() => {
+  if (!isAutoZoomEnabled.value) {
+    return {
+      scale: 1,
+      translateX: 0,
+      translateY: 0,
+      transform: 'none'
+    }
+  }
+
+  const canvas = canvasSize.value
+  const container = containerSize.value
+  
+  // 如果容器或画布尺寸为0，返回默认值
+  if (container.width === 0 || container.height === 0 || canvas.width === 0 || canvas.height === 0) {
+    return {
+      scale: 1,
+      translateX: 0,
+      translateY: 0,
+      transform: 'none'
+    }
+  }
+
+  // 计算缩放比例，留出一些边距（20px）
+  const scaleX = (container.width - 40) / canvas.width
+  const scaleY = (container.height - 40) / canvas.height
+  const scale = Math.min(scaleX, scaleY, 1) // 最大缩放为1（不放大）
+
+  // 计算居中偏移
+  const translateX = (container.width - canvas.width * scale) / 2
+  const translateY = (container.height - canvas.height * scale) / 2
+
+  return {
+    scale,
+    translateX,
+    translateY,
+    transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`
+  }
+})
+
+function updateContainerSize() {
+  if (!containerRef.value) return
+  
+  const rect = containerRef.value.getBoundingClientRect()
+  containerSize.value = {
+    width: rect.width,
+    height: rect.height
+  }
+  console.log('[ClassTree] Container size updated:', containerSize.value)
+}
+
+function toggleAutoZoom() {
+  isAutoZoomEnabled.value = !isAutoZoomEnabled.value
+  console.log('[ClassTree] Auto zoom:', isAutoZoomEnabled.value ? 'enabled' : 'disabled')
+}
+
+function initializeNodePositions() {
+  console.log('[ClassTree] initializeNodePositions called')
+  
+  // 使用分层布局算法
+  initializeNodePositionsWithHierarchy()
+}
+
+function initializePositionsWithDimensions(tiers: Record<number, ClassNode[]>, width: number, height: number) {
   const nodeWidth = 160
   const nodeHeight = 80
   const horizontalGap = 40
@@ -98,18 +243,174 @@ function initializeNodePositions() {
   const startY = 50
 
   nodePositions.value.clear()
+  console.log('[ClassTree] Clearing node positions')
 
   for (const [tier, nodes] of Object.entries(tiers)) {
     const tierNum = parseInt(tier)
     const totalWidth = nodes.length * nodeWidth + (nodes.length - 1) * horizontalGap
-    let x = startX + (canvasRect.width - totalWidth) / 2
+    let x = startX + (width - totalWidth) / 2
 
     for (const node of nodes) {
       const y = startY + tierNum * (nodeHeight + verticalGap)
       nodePositions.value.set(node.id, { x, y })
+      console.log(`[ClassTree] Set position for ${node.id}: (${x}, ${y})`)
       x += nodeWidth + horizontalGap
     }
   }
+  console.log('[ClassTree] Node positions initialized, total:', nodePositions.value.size, 'expected:', allNodes.value.length)
+}
+
+function initializeNodePositionsWithHierarchy() {
+  console.log('[ClassTree] initializeNodePositionsWithHierarchy called')
+  if (!classTree.value) {
+    console.warn('[ClassTree] No class tree, cannot initialize positions')
+    return
+  }
+
+  // 构建子节点映射
+  const childrenMap = new Map<ClassId, ClassId[]>()
+  for (const node of allNodes.value) {
+    for (const prereq of node.prerequisites) {
+      if (!childrenMap.has(prereq)) {
+        childrenMap.set(prereq, [])
+      }
+      childrenMap.get(prereq)!.push(node.id)
+    }
+  }
+
+  // 按层级分组
+  const tiers = tieredNodes.value
+  if (Object.keys(tiers).length === 0) {
+    console.warn('[ClassTree] No tiers found, using simple layout')
+    initializePositionsWithDimensions(tiers, 1200, 900)
+    return
+  }
+
+  // 计算每个层级内的节点顺序，减少连接线交叉
+  const sortedTiers: Record<number, ClassNode[]> = {}
+  for (const [tierStr, nodes] of Object.entries(tiers)) {
+    const tier = parseInt(tierStr)
+    if (tier === 0) {
+      // Tier 0 节点（学徒）放在中心
+      sortedTiers[tier] = nodes
+      continue
+    }
+
+    // 根据父节点的平均位置排序
+    const nodesWithAvgParentPos = nodes.map(node => {
+      const parents = node.prerequisites
+      let avgParentX = 0
+      if (parents.length > 0) {
+        // 计算父节点在当前布局中的平均x位置
+        const parentPositions = parents
+          .map(parentId => nodePositions.value.get(parentId))
+          .filter((p): p is NodePosition => p !== undefined)
+        
+        if (parentPositions.length > 0) {
+          avgParentX = parentPositions.reduce((sum, pos) => sum + pos.x, 0) / parentPositions.length
+        }
+      }
+      return { node, avgParentX }
+    })
+
+    // 按父节点平均x位置排序
+    nodesWithAvgParentPos.sort((a, b) => a.avgParentX - b.avgParentX)
+    sortedTiers[tier] = nodesWithAvgParentPos.map(item => item.node)
+  }
+
+  // 使用排序后的层级进行布局
+  const nodeWidth = 160
+  const nodeHeight = 80
+  const horizontalGap = 40
+  const verticalGap = 80
+  const startX = 50
+  const startY = 50
+  const maxWidth = 2000
+
+  nodePositions.value.clear()
+
+  // 先计算每个层级的位置
+  const tierPositions = new Map<number, { nodes: ClassNode[], positions: number[] }>()
+  const maxTier = Math.max(...Object.keys(sortedTiers).map(t => parseInt(t)))
+
+  for (let tier = 0; tier <= maxTier; tier++) {
+    const nodes = sortedTiers[tier]
+    if (!nodes || nodes.length === 0) continue
+
+    const totalWidth = nodes.length * nodeWidth + (nodes.length - 1) * horizontalGap
+    const xOffset = Math.max(startX, (maxWidth - totalWidth) / 2)
+    const positions: number[] = []
+    
+    let x = xOffset
+    for (const node of nodes) {
+      positions.push(x)
+      x += nodeWidth + horizontalGap
+    }
+    
+    tierPositions.set(tier, { nodes, positions })
+  }
+
+  // 调整位置以减少连接线交叉（简单版本）
+  // 我们可以进行几次迭代调整
+  for (let iteration = 0; iteration < 3; iteration++) {
+    for (let tier = 1; tier <= maxTier; tier++) {
+      const tierData = tierPositions.get(tier)
+      if (!tierData) continue
+
+      const { nodes, positions } = tierData
+      const newPositions = [...positions]
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        const parents = node.prerequisites
+        if (parents.length === 0) continue
+
+        // 计算父节点的平均x位置
+        const parentPositions = parents
+          .map(parentId => {
+            const pos = nodePositions.value.get(parentId)
+            return pos ? pos.x : undefined
+          })
+          .filter((p): p is number => p !== undefined)
+        
+        if (parentPositions.length > 0) {
+          const avgParentX = parentPositions.reduce((sum, x) => sum + x, 0) / parentPositions.length
+          // 稍微向父节点位置移动
+          newPositions[i] = newPositions[i] * 0.7 + avgParentX * 0.3
+        }
+      }
+
+      // 确保节点不重叠
+      newPositions.sort((a, b) => a - b)
+      for (let i = 1; i < newPositions.length; i++) {
+        const minDistance = nodeWidth + horizontalGap
+        if (newPositions[i] - newPositions[i-1] < minDistance) {
+          newPositions[i] = newPositions[i-1] + minDistance
+        }
+      }
+
+      // 更新层级位置
+      tierData.positions = newPositions
+    }
+  }
+
+  // 最终设置节点位置
+  for (let tier = 0; tier <= maxTier; tier++) {
+    const tierData = tierPositions.get(tier)
+    if (!tierData) continue
+
+    const { nodes, positions } = tierData
+    const y = startY + tier * (nodeHeight + verticalGap)
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const x = positions[i]
+      nodePositions.value.set(node.id, { x, y })
+      console.log(`[ClassTree] Hierarchical position for ${node.id}: (${x}, ${y})`)
+    }
+  }
+
+  console.log('[ClassTree] Hierarchical layout complete, positions:', nodePositions.value.size)
 }
 
 function getNodePosition(nodeId: ClassId): NodePosition | undefined {
@@ -212,34 +513,35 @@ function formatEffect(effect: ClassEffect): string {
   }
 }
 
-function handleMouseDown(e: MouseEvent) {
-  isDragging.value = true
-  lastMousePos.value = { x: e.clientX, y: e.clientY }
-}
-
-function handleMouseMove(e: MouseEvent) {
-  if (!isDragging.value) return
-  const dx = e.clientX - lastMousePos.value.x
-  const dy = e.clientY - lastMousePos.value.y
-  pan.value.x += dx
-  pan.value.y += dy
-  lastMousePos.value = { x: e.clientX, y: e.clientY }
-}
-
-function handleMouseUp() {
-  isDragging.value = false
-}
-
-function handleWheel(e: WheelEvent) {
-  e.preventDefault()
-  const delta = e.deltaY > 0 ? -0.1 : 0.1
-  const newZoom = Math.max(0.5, Math.min(2, zoom.value + delta))
-  zoom.value = newZoom
-}
-
 function resetView() {
-  zoom.value = 1
-  pan.value = { x: 0, y: 0 }
+  // 重置节点布局
+  nodePositions.value.clear()
+  initializeNodePositions()
+}
+
+function showDebugData() {
+  console.log('=== ClassTree Debug Info ===')
+  console.log('hasClassTree:', hasClassTree.value)
+  console.log('classTree.value:', classTree.value)
+  console.log('classTree nodes count:', classTree.value?.nodes?.size || 0)
+  console.log('classTree edges count:', classTree.value?.edges?.size || 0)
+  console.log('allNodes count:', allNodes.value.length)
+  console.log('tieredNodes keys:', Object.keys(tieredNodes.value).length)
+  console.log('nodePositions count:', nodePositions.value.size)
+  console.log('unlockedClassIds:', unlockedClassIds.value)
+  console.log('availableClasses count:', availableClasses.value.length)
+  console.log('playerState:', playerState.value)
+  console.log('=== End Debug Info ===')
+  
+  showDebugInfo.value = !showDebugInfo.value
+}
+
+function forceRefresh() {
+  console.log('[ClassTree] Force refreshing...')
+  nodePositions.value.clear()
+  setTimeout(() => {
+    initializeNodePositions()
+  }, 50)
 }
 
 const classEffects = computed(() => {
@@ -248,24 +550,58 @@ const classEffects = computed(() => {
 
 onMounted(() => {
   console.log('[ClassTree] Component mounted')
-  console.log('[ClassTree] Tree:', classTree.value)
-  console.log('[ClassTree] Tree nodes:', classTree.value?.nodes.size || 0)
-  if (classTree.value) {
-    console.log('[ClassTree] All nodes:', Array.from(classTree.value.nodes.keys()))
+  console.log('[ClassTree] Player:', game.player.value)
+  console.log('[ClassTree] ClassManager:', game.player.value?.classManager)
+  console.log('[ClassTree] ClassTree:', classTree.value)
+  console.log('[ClassTree] Tree nodes count:', classTree.value?.nodes?.size || 0)
+  
+  if (classTree.value && classTree.value.nodes) {
+    const nodeIds = Array.from(classTree.value.nodes.keys())
+    console.log('[ClassTree] All nodes IDs:', nodeIds)
+    console.log('[ClassTree] First few nodes:', nodeIds.slice(0, 5))
   }
-  console.log('[ClassTree] Player state:', playerState.value)
+  
+  console.log('[ClassTree] Player talents:', playerState.value.talents)
+  console.log('[ClassTree] Player level:', playerState.value.level)
+  console.log('[ClassTree] Player gold:', playerState.value.gold)
+  console.log('[ClassTree] Unlocked classes:', unlockedClassIds.value)
 
+  // 设置ResizeObserver监听容器尺寸变化
+  if (containerRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      updateContainerSize()
+    })
+    resizeObserver.observe(containerRef.value)
+    updateContainerSize() // 初始更新
+  }
+
+  // 立即尝试初始化位置，然后设置一个延迟重试
+  setTimeout(() => {
+    console.log('[ClassTree] Initializing node positions...')
+    initializeNodePositions()
+    
+    // 如果还是没有位置，再试一次
+    setTimeout(() => {
+      if (nodePositions.value.size === 0 && classTree.value?.nodes.size > 0) {
+        console.log('[ClassTree] Retrying node position initialization...')
+        initializeNodePositions()
+      }
+    }, 500)
+  }, 100)
+})
+
+onUnmounted(() => {
+  if (resizeObserver && containerRef.value) {
+    resizeObserver.unobserve(containerRef.value)
+  }
+  resizeObserver = null
+})
+
+watch(() => classTree.value?.nodes.size, () => {
   setTimeout(() => {
     initializeNodePositions()
   }, 100)
 })
-
-// 暂时禁用 watch 来排查问题
-// watch(() => classTree.value?.nodes.size, () => {
-//   setTimeout(() => {
-//     initializeNodePositions()
-//   }, 100)
-// })
 
 </script>
 
@@ -276,48 +612,62 @@ onMounted(() => {
       <div class="controls">
         <button @click="resetView" class="control-btn">重置视图</button>
         <button @click="initializeNodePositions" class="control-btn">刷新布局</button>
+        <button @click="toggleAutoZoom" class="control-btn" :class="{ active: isAutoZoomEnabled }">
+          {{ isAutoZoomEnabled ? '🔍 自动缩放' : '🔍 手动查看' }}
+        </button>
+        <button @click="forceRefresh" class="control-btn">强制刷新</button>
+        <button @click="showDebugData" class="control-btn">调试信息</button>
       </div>
     </div>
 
     <div class="content">
-      <div 
-        class="tree-container"
-        @mousedown="handleMouseDown"
-        @mousemove="handleMouseMove"
-        @mouseup="handleMouseUp"
-        @mouseleave="handleMouseUp"
-        @wheel="handleWheel"
-      >
+       <div v-if="!hasClassTree" class="no-tree-message">
+          <div class="no-tree-icon">🎭</div>
+          <h3>职业树加载中...</h3>
+          <p>如果此消息持续显示，请检查控制台错误。</p>
+          <button @click="initializeNodePositions" class="retry-btn">重试加载</button>
+       </div>
         <div 
-          class="class-tree-canvas"
-          :style="{ 
-            transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-            transformOrigin: '0 0'
-          }"
+          v-else
+          ref="containerRef"
+          class="tree-container"
+          :style="{ overflow: isAutoZoomEnabled ? 'hidden' : 'auto' }"
         >
-          <svg class="connections" :width="10000" :height="10000">
-            <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
-              </marker>
-            </defs>
-            <g
-              v-for="node in allNodes"
-              :key="`${node.id}-connections`"
-            >
-              <line
-                v-for="prereq in node.prerequisites"
-                :key="`${prereq}-${node.id}`"
-                :x1="getNodePosition(prereq)?.x || 0 + 80"
-                :y1="getNodePosition(prereq)?.y || 0 + 40"
-                :x2="getNodePosition(node.id)?.x || 0 + 80"
-                :y2="getNodePosition(node.id)?.y || 0 + 40"
-                stroke="#666"
-                stroke-width="2"
-                marker-end="url(#arrowhead)"
-              />
-            </g>
-          </svg>
+          <div 
+            class="class-tree-canvas"
+            :style="{ 
+              width: canvasSize.width + 'px',
+              height: canvasSize.height + 'px',
+              transform: zoomTransform.transform,
+              transformOrigin: '0 0'
+            }"
+          >
+            <svg v-if="hasNodePositions" class="connections" :width="canvasSize.width" :height="canvasSize.height">
+             <defs>
+               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                 <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+               </marker>
+             </defs>
+             <g
+               v-for="node in allNodes"
+               :key="`${node.id}-connections`"
+             >
+               <line
+                 v-for="prereq in node.prerequisites"
+                 :key="`${prereq}-${node.id}`"
+                 :x1="(getNodePosition(prereq)?.x || 0) + 80"
+                 :y1="(getNodePosition(prereq)?.y || 0) + 40"
+                 :x2="(getNodePosition(node.id)?.x || 0) + 80"
+                 :y2="(getNodePosition(node.id)?.y || 0) + 40"
+                 stroke="#666"
+                 stroke-width="2"
+                 marker-end="url(#arrowhead)"
+               />
+             </g>
+           </svg>
+           <div v-else class="loading-connections">
+             正在计算职业树布局...
+           </div>
 
           <div
             v-for="node in allNodes"
@@ -436,6 +786,22 @@ onMounted(() => {
           </div>
         </div>
       </div>
+      
+       <div v-if="showDebugInfo" class="debug-panel">
+         <h4>调试信息</h4>
+         <div class="debug-info">
+           <div><strong>职业树状态:</strong> {{ hasClassTree ? '已加载' : '未加载' }}</div>
+           <div><strong>节点数量:</strong> {{ allNodes.length }}</div>
+           <div><strong>已计算位置:</strong> {{ nodePositions.size }}</div>
+           <div><strong>已解锁职业:</strong> {{ unlockedClassIds.length }}</div>
+           <div><strong>可解锁职业:</strong> {{ availableClasses.length }}</div>
+           <div><strong>Tier分布:</strong> {{ Object.keys(tieredNodes).join(', ') }}</div>
+           <div><strong>容器尺寸:</strong> {{ containerSize.width }}×{{ containerSize.height }}</div>
+           <div><strong>画布尺寸:</strong> {{ canvasSize.width }}×{{ canvasSize.height }}</div>
+           <div><strong>缩放比例:</strong> {{ zoomTransform.scale.toFixed(3) }}</div>
+           <div><strong>自动缩放:</strong> {{ isAutoZoomEnabled ? '启用' : '禁用' }}</div>
+         </div>
+       </div>
     </div>
   </div>
 </template>
@@ -482,6 +848,15 @@ onMounted(() => {
   background: #6200ee;
 }
 
+.control-btn.active {
+  background: #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+.control-btn.active:hover {
+  background: #66bb6a;
+}
+
 .content {
   display: flex;
   flex: 1;
@@ -491,23 +866,15 @@ onMounted(() => {
 .tree-container {
   flex: 1;
   position: relative;
-  overflow: hidden;
-  cursor: grab;
+  overflow: auto;
   background: #0a0a0a;
   background-image: 
     radial-gradient(circle at 1px 1px, #333 1px, transparent 0);
   background-size: 20px 20px;
 }
 
-.tree-container:active {
-  cursor: grabbing;
-}
-
 .class-tree-canvas {
-  position: absolute;
-  width: 10000px;
-  height: 10000px;
-  transform-origin: 0 0;
+  position: relative;
 }
 
 .connections {
@@ -806,4 +1173,87 @@ onMounted(() => {
   font-size: 0.85rem;
   color: #b0bec5;
 }
+
+.loading-connections {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #888;
+  font-size: 1.2rem;
+  padding: 20px;
+  background: rgba(30, 30, 30, 0.8);
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.no-tree-message {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  background: #1e1e1e;
+  border-radius: 12px;
+  padding: 40px;
+}
+
+.no-tree-icon {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+.no-tree-message h3 {
+  margin: 0;
+  color: #bb86fc;
+}
+
+.no-tree-message p {
+  color: #888;
+  margin: 0;
+}
+
+.retry-btn {
+  padding: 12px 24px;
+  background: #3700b3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.retry-btn:hover {
+  background: #6200ee;
+}
+
+.debug-panel {
+  margin-top: 20px;
+  padding: 15px;
+  background: #252525;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.debug-panel h4 {
+  margin: 0 0 10px 0;
+  color: #ff9800;
+}
+
+.debug-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.debug-info div {
+  padding: 4px 8px;
+  background: #1e1e1e;
+  border-radius: 4px;
+}
+
 </style>

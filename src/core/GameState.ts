@@ -29,7 +29,7 @@ export class GameState {
       activityRunner: defaultActivityRunner,
       hasStarted: false,
       ...initialData
-    })
+    }) as GameStateData
 
     this.setupActivityCallbacks()
   }

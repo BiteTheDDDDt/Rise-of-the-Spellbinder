@@ -23,12 +23,6 @@ const selectedNumberFormat = ref('default')
 const autoSaveEnabled = ref(true)
 const autoSaveInterval = ref(30) // 秒
 
-function handleNumberFormatChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const newFormat = target.value as 'default' | 'compact' | 'formatted'
-  selectedNumberFormat.value = newFormat
-}
-
 function handleSave() {
   saveSystem.saveToLocalStorage()
   alert('游戏已保存！')
@@ -71,12 +65,9 @@ function handleImport(event: Event) {
   input.value = ''
 }
 
-function handleLanguageChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const newLocale = target.value as 'en-US' | 'zh-CN'
-  
-  // Only update if value actually changed
-  if (newLocale && newLocale !== locale.value) {
+function handleLanguageSelect(langCode: string) {
+  const newLocale = langCode as 'en-US' | 'zh-CN'
+  if (newLocale !== locale.value) {
     setI18nLocale(newLocale)
     console.log(`Language changed to: ${newLocale}`)
   }
@@ -99,12 +90,17 @@ function resetGame() {
       <div class="settings-card">
         <h3>🌐 语言</h3>
         <div class="setting-item">
-          <label for="language-select">界面语言:</label>
-          <select id="language-select" :value="locale" @change="handleLanguageChange" class="setting-select">
-            <option v-for="lang in languages" :key="lang.code" :value="lang.code">
+          <label>界面语言:</label>
+          <div class="option-buttons">
+            <button 
+              v-for="lang in languages" 
+              :key="lang.code"
+              :class="['option-btn', { active: locale === lang.code }]"
+              @click="handleLanguageSelect(lang.code)"
+            >
               {{ lang.label }}
-            </option>
-          </select>
+            </button>
+          </div>
           <p class="setting-hint">切换游戏界面显示语言。</p>
         </div>
       </div>
@@ -113,17 +109,17 @@ function resetGame() {
       <div class="settings-card">
         <h3>📊 显示</h3>
         <div class="setting-item">
-          <label for="number-format">数字格式:</label>
-          <select id="number-format" :value="selectedNumberFormat" @change="handleNumberFormatChange" class="setting-select">
-            <option 
+          <label>数字格式:</label>
+          <div class="option-buttons">
+            <button 
               v-for="format in numberFormats" 
-              :key="format.id" 
-              :value="format.id"
-              :selected="selectedNumberFormat === format.id"
+              :key="format.id"
+              :class="['option-btn', { active: selectedNumberFormat === format.id }]"
+              @click="selectedNumberFormat = format.id"
             >
               {{ format.label }}
-            </option>
-          </select>
+            </button>
+          </div>
           <p class="setting-hint">选择数字显示格式。</p>
         </div>
       </div>
@@ -267,47 +263,33 @@ function resetGame() {
   font-weight: bold;
 }
 
-.setting-select {
-  width: 100%;
-  padding: 10px 12px;
-  background: #333;
-  color: white;
-  border: 1px solid #444;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  outline: none;
-  position: relative;
-  z-index: 1;
-  pointer-events: auto;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+.option-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.setting-select:hover {
+.option-btn {
+  background: #333;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
   background: #3a3a3a;
+  color: #e0e0e0;
   border-color: #666;
 }
 
-.setting-select:focus {
-  background: #3a3a3a;
-  border-color: #bb86fc;
-  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
-}
-
-.setting-select option {
-  background: #333;
-  color: #e0e0e0;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.setting-select option:hover,
-.setting-select option:checked {
+.option-btn.active {
   background: #bb86fc;
   color: white;
+  border-color: #bb86fc;
 }
 
 .setting-hint {

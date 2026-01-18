@@ -226,11 +226,16 @@ watch(() => game.state.hasStarted, (hasStarted) => {
           </div>
         </div>
         <div class="top-right">
-          <select v-model="locale" class="lang-select">
-            <option v-for="lang in languages" :key="lang.code" :value="lang.code">
+          <div class="lang-switcher">
+            <button 
+              v-for="lang in languages" 
+              :key="lang.code"
+              :class="['lang-btn', { active: locale === lang.code }]"
+              @click="locale = lang.code"
+            >
               {{ lang.label }}
-            </option>
-          </select>
+            </button>
+          </div>
           <div class="git-info" :title="`${gitInfo.commitMessage} (${formatGitDate(gitInfo.commitDate)})`">
             <span class="git-hash">{{ gitInfo.commitShortHash }}</span>
             <span class="git-branch">{{ gitInfo.branch }}</span>
@@ -455,44 +460,32 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   font-size: 0.75rem;
 }
 
-.lang-select {
+.lang-switcher {
+  display: flex;
+  gap: 4px;
   background: #252525;
-  color: #e0e0e0;
   border: 1px solid #444;
   border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 0.9rem;
+  padding: 2px;
+}
+
+.lang-btn {
+  background: transparent;
+  color: #888;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
   cursor: pointer;
-  outline: none;
-  position: relative;
-  z-index: 1;
-  pointer-events: auto;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  transition: all 0.2s;
 }
 
-.lang-select:hover {
-  background: #333;
-  border-color: #666;
-}
-
-.lang-select:focus {
-  background: #333;
-  border-color: #bb86fc;
-  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.3);
-}
-
-.lang-select option {
-  background: #252525;
+.lang-btn:hover {
   color: #e0e0e0;
-  padding: 8px;
-  cursor: pointer;
+  background: #333;
 }
 
-.lang-select option:hover,
-.lang-select option:checked {
+.lang-btn.active {
   background: #bb86fc;
   color: white;
 }

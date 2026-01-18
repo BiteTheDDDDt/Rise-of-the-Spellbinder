@@ -25,7 +25,7 @@ const { t, locale } = useI18n()
 const game = useGame()
 
 const languages = [
-  { code: 'en-US', label: 'English' },
+  { code: 'en-US', label: t('common.language') },
   { code: 'zh-CN', label: '中文' }
 ]
 
@@ -54,16 +54,16 @@ watch(menuItems, (newItems, oldItems = []) => {
 
 const updateMenuItems = () => {
   const items = [
-    { id: 'activities', icon: '⚡', label: '活动' },
-    { id: 'skills', icon: '📚', label: '技能' },
-    { id: 'spells', icon: '✨', label: '法术' },
-    { id: 'explore', icon: '🗺️', label: '探索' },
-    { id: 'combat', icon: '⚔️', label: '战斗' },
-    { id: 'character', icon: '👤', label: '角色' },
-    { id: 'achievements', icon: '🏆', label: '成就' },
-    { id: 'inventory', icon: '🎒', label: '背包' },
-    { id: 'shop', icon: '🏪', label: '商店' },
-    { id: 'settings', icon: '⚙️', label: '设置' }
+    { id: 'activities', icon: '⚡', label: t('common.activities') },
+    { id: 'skills', icon: '📚', label: t('common.skills') },
+    { id: 'spells', icon: '✨', label: t('common.spells') },
+    { id: 'explore', icon: '🗺️', label: t('common.explore') },
+    { id: 'combat', icon: '⚔️', label: t('common.fight') },
+    { id: 'character', icon: '👤', label: t('common.character') },
+    { id: 'achievements', icon: '🏆', label: t('common.achievements') },
+    { id: 'inventory', icon: '🎒', label: t('common.inventory') },
+    { id: 'shop', icon: '🏪', label: t('common.shop') },
+    { id: 'settings', icon: '⚙️', label: t('common.settings') }
   ]
   
   // 解锁逻辑

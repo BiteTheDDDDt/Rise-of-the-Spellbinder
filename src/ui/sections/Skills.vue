@@ -18,6 +18,16 @@ function getSkillName(id: string, fallback: string): string {
   return t(`skill.${id}`, fallback)
 }
 
+const elements: Array<Element | 'neutral' | 'all'> = ['all', 'fire', 'water', 'earth', 'wind', 'neutral']
+
+const elementDescriptions: Record<Element | 'neutral', string> = {
+  fire: t('element.fireDesc'),
+  water: t('element.waterDesc'),
+  earth: t('element.earthDesc'),
+  wind: t('element.windDesc'),
+  neutral: t('element.neutralDesc')
+}
+
 // Load skill definitions
 onMounted(async () => {
   try {
@@ -64,22 +74,8 @@ const lockedSkills = computed(() => {
   return game.player.value.skillManager.getLockedSkills()
 })
 
-
-
-const elements: Array<Element | 'neutral' | 'all'> = ['all', 'fire', 'water', 'earth', 'wind', 'neutral']
-
-const elementDescriptions: Record<Element | 'neutral', string> = {
-  fire: '火元素：代表热情、破坏与变革',
-  water: '水元素：代表流动、治愈与适应',
-  earth: '土元素：代表稳定、防御与生长',
-  wind: '风元素：代表自由、速度与洞察',
-  neutral: '中性：通用技能，不受元素限制'
-}
-
-
-
 function getSkillEffectDescription(skill: any): string {
-  if (!skill.effects || skill.effects.length === 0) return '无效果'
+  if (!skill.effects || skill.effects.length === 0) return t('ui.none')
   return skill.effects.map((effect: any) => {
     if (effect.formula) {
       return `${effect.type}: ${effect.formula}`
@@ -153,12 +149,12 @@ function unlockSkill(skillId: string) {
       <select id="element-select" v-model="selectedElement" class="element-select">
         <option v-for="elem in elements" :key="elem" :value="elem">
           {{ 
-            elem === 'all' ? '全部' :
-            elem === 'fire' ? '🔥 火' :
-            elem === 'water' ? '💧 水' :
-            elem === 'earth' ? '⛰️ 土' :
-            elem === 'wind' ? '🌪️ 风' :
-            '⚪ 中性'
+            elem === 'all' ? t('common.all') :
+            elem === 'fire' ? `🔥 ${t('element.fire')}` :
+            elem === 'water' ? `💧 ${t('element.water')}` :
+            elem === 'earth' ? `⛰️ ${t('element.earth')}` :
+            elem === 'wind' ? `🌪️ ${t('element.wind')}` :
+            `⚪ ${t('element.neutral')}`
           }}
         </option>
       </select>
@@ -204,14 +200,14 @@ function unlockSkill(skillId: string) {
             class="btn practice-btn"
             :disabled="skill.isMaxed"
           >
-            {{ skill.isMaxed ? '已满级' : '练习' }}
+            {{ skill.isMaxed ? t('common.maxed') : t('common.practice') }}
           </button>
           <button 
             @click="toggleSkillPracticeRepeat(skill.id)" 
             :class="['btn repeat-btn', { active: isSkillPracticeRepeating(skill.id) }]"
             :disabled="skill.isMaxed"
           >
-            {{ isSkillPracticeRepeating(skill.id) ? '取消重复' : '重复' }}
+            {{ isSkillPracticeRepeating(skill.id) ? t('ui.cancelRepeat') : t('ui.repeat') }}
           </button>
         </div>
       </div>
@@ -239,14 +235,14 @@ function unlockSkill(skillId: string) {
           <p class="skill-desc">{{ skill.description }}</p>
           
           <div class="skill-requirements">
-            <strong>解锁条件: </strong>
+            <strong>{{ t('ui.requirements') }}: </strong>
             <span v-if="skill.unlockCondition" class="req-text">
               {{ 
-                skill.unlockCondition === 'true' ? '无要求' :
+                skill.unlockCondition === 'true' ? t('ui.noRequirements') :
                 skill.unlockCondition.replace('fire', '🔥').replace('water', '💧').replace('earth', '⛰️').replace('wind', '🌪️')
               }}
             </span>
-            <span v-else class="req-text">无要求</span>
+            <span v-else class="req-text">{{ t('ui.noRequirements') }}</span>
           </div>
 
           <div class="skill-effects">
@@ -259,7 +255,7 @@ function unlockSkill(skillId: string) {
             class="btn unlock-btn"
             :disabled="!canUnlockSkill(skill)"
           >
-            {{ canUnlockSkill(skill) ? '解锁' : '条件未满足' }}
+            {{ canUnlockSkill(skill) ? t('common.unlock') : t('ui.requirementsNotMet') }}
           </button>
         </div>
       </div>
@@ -287,17 +283,17 @@ function unlockSkill(skillId: string) {
           <p class="skill-desc">{{ skill.description }}</p>
           
           <div class="skill-meta">
-            <span class="meta-item">最大等级: {{ skill.maxLevel }}</span>
-            <span class="meta-item">元素: {{ 
-              skill.element === 'fire' ? '火' :
-              skill.element === 'water' ? '水' :
-              skill.element === 'earth' ? '土' :
-              skill.element === 'wind' ? '风' : '中性'
+            <span class="meta-item">{{ t('ui.maxLevel') }}: {{ skill.maxLevel }}</span>
+            <span class="meta-item">{{ t('element.element') }}: {{ 
+              skill.element === 'fire' ? t('element.fire') :
+              skill.element === 'water' ? t('element.water') :
+              skill.element === 'earth' ? t('element.earth') :
+              skill.element === 'wind' ? t('element.wind') : t('element.neutral')
             }}</span>
           </div>
-
+          
           <div class="skill-effects">
-            <strong>效果: </strong>
+            <strong>{{ t('common.effect') }}: </strong>
             <span class="effects-text">{{ getSkillEffectDescription(skill) }}</span>
           </div>
         </div>

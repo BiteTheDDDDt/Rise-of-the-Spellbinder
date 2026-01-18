@@ -75,7 +75,8 @@ async function startTestCombat() {
   if (!game.player.value) return
   
   // 加载怪物数据
-  const response = await fetch('/data/monsters.json')
+  const basePath = import.meta.env.BASE_URL || '/'
+  const response = await fetch(`${basePath}data/monsters.json`)
   const monsterData = await response.json()
   
   // 选择测试怪物
@@ -83,8 +84,7 @@ async function startTestCombat() {
   if (!monsterEntry) return
   
   const { Monster } = await import('../../entities/monster')
-  const monster = new Monster(monsterEntry)
-
+  const monster = new Monster(monsterEntry) 
   
   const { CombatSystem } = await import('../../systems/combat')
   combatSystem.value = new CombatSystem(

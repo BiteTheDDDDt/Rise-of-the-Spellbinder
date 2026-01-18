@@ -16,7 +16,8 @@ const itemDefinitions = ref<any[]>([])
 // Load item definitions
 onMounted(async () => {
   try {
-    const response = await fetch('/data/items.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const response = await fetch(`${basePath}data/items.json`)
     const data = await response.json()
     itemDefinitions.value = data.items || []
     

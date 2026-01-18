@@ -17,7 +17,8 @@ const showHidden = ref(false)
 // Load achievement definitions
 onMounted(async () => {
   try {
-    const response = await fetch('/data/achievements.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const response = await fetch(`${basePath}data/achievements.json`)
     const data = await response.json()
     achievementDefinitions.value = data.achievements || []
     

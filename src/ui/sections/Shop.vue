@@ -8,6 +8,7 @@ const game = useGame()
 const shops = ref<Shop[]>([])
 const selectedShop = ref<Shop | null>(null)
 const shopDefinitions = ref<any[]>([])
+const itemDefinitions = ref<any[]>([])
 const mode = ref<'buy' | 'sell'>('buy')
 const selectedShopItemIndex = ref<number | null>(null)
 const selectedInventorySlot = ref<number | null>(null)
@@ -16,26 +17,16 @@ const quantity = ref(1)
 // Load shop definitions and item definitions
 onMounted(async () => {
   try {
-    // Load item definitions first
-    const itemResponse = await fetch('/data/items.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const itemResponse = await fetch(`${basePath}data/items.json`)
     const itemData = await itemResponse.json()
-    itemManager.registerDefinitions(itemData.items || [])
-    
-    // Load shop definitions
-    const shopResponse = await fetch('/data/shops.json')
+    itemDefinitions.value = itemData.items || []
+
+    const shopResponse = await fetch(`${basePath}data/shops.json`)
     const shopData = await shopResponse.json()
     shopDefinitions.value = shopData.shops || []
-    
-    // TODO: Initialize shop manager in game state
-    // For now, create shops directly
-    shops.value = shopDefinitions.value.map(def => new Shop(def))
-    if (shops.value.length > 0) {
-      selectedShop.value = shops.value[0]!
-    } else {
-      selectedShop.value = null
-    }
   } catch (error) {
-    console.error('Failed to load shops:', error)
+    console.error('加载商店数据失败:', error)
   }
 })
 

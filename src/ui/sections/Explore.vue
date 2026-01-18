@@ -41,7 +41,8 @@ const discoveredLocales = computed(() => {
 async function loadLocaleData() {
   try {
     // 加载地点数据
-    const response = await fetch('/data/locales.json')
+    const basePath = import.meta.env.BASE_URL || '/'
+    const response = await fetch(`${basePath}data/locales.json`)
     const localeData = await response.json()
     
     // 创建地点管理器

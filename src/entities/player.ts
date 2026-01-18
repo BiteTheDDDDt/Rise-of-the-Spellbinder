@@ -1,4 +1,5 @@
-import { reactive, shallowReactive } from 'vue'
+import { reactive, markRaw, ref } from 'vue'
+import type { ClassId } from '../systems/class'
 import { Talent } from '../systems/talent'
 import { ResourceManager, type ResourceId } from '../systems/resource'
 import { SkillManager } from '../systems/skill'
@@ -21,11 +22,13 @@ export interface PlayerData {
   achievementManager: AchievementManager
   inventory: Inventory
   simpleClassManager: any
-  classManager: any
+  classManager: ClassManager
 }
 
 export class Player {
   data: PlayerData
+  // 独立的响应式引用，用于追踪职业解锁状态
+  unlockedClassesRef = ref<ClassId[]>([])
 
   constructor(name: string, talentPreset?: 'fire' | 'water' | 'earth' | 'wind') {
     try {
@@ -51,9 +54,13 @@ export class Player {
 
       const classManager = new ClassManager()
       classManager.setClassTree(classTree)
-      // 使用 shallowReactive 保持第一层响应性，但不对深层对象做响应式处理
-      const reactiveClassManager = shallowReactive(classManager)
-      console.log('[Player] ClassManager created and made shallow reactive')
+
+      // 标记为非响应式，避免 Vue 深度遍历大型对象
+      markRaw(classManager)
+      console.log('[Player] ClassManager marked as non-reactive')
+
+      // 初始化响应式的职业解锁引用
+      this.unlockedClassesRef.value = ['apprentice']
       
       simpleClassManager.init()
       console.log('[Player] SimpleClassManager initialized')
@@ -70,7 +77,7 @@ export class Player {
         achievementManager,
         inventory,
         simpleClassManager,
-        classManager: reactiveClassManager
+        classManager
       })
       console.log('[Player] Reactive data created')
 
@@ -87,8 +94,9 @@ export class Player {
   private unlockInitialClass() {
     try {
       const apprenticeNode = this.data.classManager.classTree.getNode('apprentice')
-      if (apprenticeNode && !this.data.classManager.unlockedClasses.includes('apprentice')) {
-        this.data.classManager.unlockedClasses.push('apprentice')
+      // 通过响应式引用更新，而不是直接修改 classManager 内部数据
+      if (apprenticeNode && !this.unlockedClassesRef.value.includes('apprentice')) {
+        this.unlockedClassesRef.value.push('apprentice')
         this.data.classManager.classTree.achievements.push('apprentice')
         console.log('[Player] Initial class unlocked: Apprentice')
       }
@@ -160,6 +168,20 @@ export class Player {
 
   get classManager(): ClassManager {
     return this.data.classManager
+  }
+
+  // 获取响应式的职业解锁列表
+  getUnlockedClasses(): ClassId[] {
+    return this.unlockedClassesRef.value
+  }
+
+  // 解锁职业，同时更新内部状态和响应式引用
+  unlockPlayerClass(classId: ClassId, talents: any, skills: Map<string, number>, level: number, gold: number): boolean {
+    const success = this.data.classManager.unlockClass(classId, talents, skills, level, gold)
+    if (success && !this.unlockedClassesRef.value.includes(classId)) {
+      this.unlockedClassesRef.value.push(classId)
+    }
+    return success
   }
 
   addExperience(amount: number) {
@@ -526,7 +548,10 @@ export class Player {
       const classTree = createDefaultClassTree()
       // 不需要 markRaw，因为 ClassTree 内部已经不用 reactive 了
       classManager.setClassTree(classTree)
-      player.data.classManager = shallowReactive(classManager)
+      // 恢复响应式的职业解锁列表
+      player.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
+      markRaw(classManager)
+      player.data.classManager = classManager
     }
 
     return player

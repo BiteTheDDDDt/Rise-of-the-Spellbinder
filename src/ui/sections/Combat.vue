@@ -104,8 +104,8 @@ async function startTestCombat() {
   )
   
   isCombatActive.value = true
-  combatSystem.value.start()
-  
+  combatSystem.value?.start()
+
   // 更新日志
   updateCombatLog()
 }

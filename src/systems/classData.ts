@@ -1,14 +1,9 @@
 import { ClassTree, ClassNode } from './class'
 
 // 缓存已创建的 ClassTree，避免重复创建
-let cachedClassTree: ClassTree | null = null
-
+// 暂时禁用缓存来调试 OOM 问题
 export function createDefaultClassTree(): ClassTree {
   console.log('[classData] Creating default class tree...')
-  if (cachedClassTree) {
-    console.log('[classData] Returning cached class tree')
-    return cachedClassTree
-  }
 
   const classTree = new ClassTree()
 
@@ -660,12 +655,18 @@ export function createDefaultClassTree(): ClassTree {
   for (const def of classDefinitions) {
     if (def.prerequisites && def.prerequisites.length > 0) {
       for (const prereq of def.prerequisites) {
-        classTree.addPrerequisite(def.id, prereq)
+        try {
+          console.log(`[classData] Adding prerequisite: ${def.id} <- ${prereq}`)
+          classTree.addPrerequisite(def.id, prereq)
+        } catch (error) {
+          console.error(`[classData] ERROR adding prerequisite ${def.id} <- ${prereq}:`, error)
+          throw error
+        }
       }
     }
   }
 
   console.log('[classData] Class tree created with', classTree.nodes.size, 'nodes')
-  cachedClassTree = classTree
+  // cachedClassTree = classTree
   return classTree
 }

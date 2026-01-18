@@ -9,7 +9,7 @@ export interface GameStateData {
   gameTime: number
   isPaused: boolean
   lastUpdate: number
-  player: Player
+  player: any  // 使用 any 类型，因为 reactive() 会改变类型
   activityRunner: ActivityRunner
   hasStarted: boolean
 }

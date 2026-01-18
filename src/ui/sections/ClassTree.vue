@@ -31,7 +31,7 @@ const playerState = computed(() => {
     skills: skillMap,
     level: game.player.value?.level || 1,
     gold: game.player.value?.resourceManager.getResource('gold')?.value || 0,
-    unlockedClasses: game.player.value?.classManager?.unlockedClasses || []
+    unlockedClasses: game.player.value?.getUnlockedClasses?.() || []
   }
 })
 
@@ -121,7 +121,7 @@ function unlockClass(classId: ClassId) {
   const node = classTree.value?.getNode(classId)
   if (!node) return
 
-  const success = game.player.value?.classManager?.unlockClass(
+  const success = game.player.value?.unlockPlayerClass(
     classId,
     playerState.value.talents,
     playerState.value.skills,

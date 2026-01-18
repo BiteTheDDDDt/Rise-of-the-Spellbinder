@@ -315,10 +315,12 @@ export class ClassManager {
   unlockedClasses: ClassId[]
   private cachedAvailableClasses: ClassNode[] = []
   private lastCheckTime = 0
+  // 添加版本号，用于触发 UI 更新
+  version = 0
 
   constructor() {
     this.classTree = new ClassTree()
-    this.unlockedClasses = []  // 移除 reactive，使用普通数组
+    this.unlockedClasses = []  // 使用普通数组
   }
 
   setClassTree(classTree: ClassTree) {
@@ -368,6 +370,7 @@ export class ClassManager {
 
       this.unlockedClasses.push(classId)
       this.classTree.achievements.push(classId)
+      this.version++  // 触发响应式更新
 
       logSystem.success(`职业进阶: ${node.name}`, { classId, tier: node.tier })
 

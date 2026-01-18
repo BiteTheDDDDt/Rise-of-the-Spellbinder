@@ -424,6 +424,15 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   padding: 6px 12px;
   font-size: 0.9rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lang-select:hover {
+  background: #333;
+  border-color: #666;
 }
 
 .save-buttons {

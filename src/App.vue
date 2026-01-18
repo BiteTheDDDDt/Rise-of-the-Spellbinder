@@ -180,6 +180,10 @@ function handleNewGameCreated() {
   showMainGame()
 }
 
+function openGitHubRepo() {
+  window.open('https://github.com/BiteTheDDDDt/Rise-of-the-Spellbinder', '_blank')
+}
+
 // 监视游戏状态，如果hasStarted变为false，则显示开始界面
 watch(() => game.state.hasStarted, (hasStarted) => {
   if (!hasStarted && currentView.value !== 'start') {
@@ -239,7 +243,7 @@ watch(() => game.state.hasStarted, (hasStarted) => {
           <div 
             class="git-info" 
             :title="`${gitInfo.commitMessage} (${formatGitDate(gitInfo.commitDate)})`"
-            @click="window.open('https://github.com/BiteTheDDDDt/Rise-of-the-Spellbinder', '_blank')"
+            @click="openGitHubRepo"
           >
             <span class="git-hash">{{ gitInfo.commitShortHash }}</span>
             <span class="git-branch">{{ gitInfo.branch }}</span>

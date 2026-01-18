@@ -243,11 +243,11 @@ onMounted(() => {
   }, 100)
 })
 
-watch(() => [tieredNodes.value, selectedClass.value], () => {
+watch(() => classTree.value?.nodes.size, () => {
   setTimeout(() => {
     initializeNodePositions()
   }, 100)
-}, { deep: true })
+})
 </script>
 
 <template>
@@ -349,7 +349,7 @@ watch(() => [tieredNodes.value, selectedClass.value], () => {
                 ✓ {{ formatRequirement(req) }}
               </div>
               <div v-if="selectedClass.prerequisites.length > 0" class="requirement-item">
-                前置职业: {{ selectedClass.prerequisites.map(id => classTree.getNode(id)?.name).join(', ') }}
+                前置职业: {{ selectedClass.prerequisites.map(id => classTree?.getNode(id)?.name).join(', ') }}
               </div>
             </div>
           </div>

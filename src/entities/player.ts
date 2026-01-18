@@ -37,11 +37,12 @@ export class Player {
       const inventory = new Inventory()
       const simpleClassManager = new SimpleClassManager()
       const classManager = new ClassManager()
-      classManager.setClassTree(createDefaultClassTree())
+      
+      // 标记 classTree 为非响应式，因为职业树数据量很大且不需要响应式
+      const classTree = createDefaultClassTree()
+      markRaw(classTree)
+      classManager.setClassTree(classTree)
       simpleClassManager.init()
-
-      // 标记 classManager 为非响应式，因为职业树数据量很大且不需要响应式
-      markRaw(classManager)
 
       this.data = reactive({
         name,
@@ -506,7 +507,9 @@ export class Player {
 
     if (data.classManager) {
       player.data.classManager = ClassManager.fromJSON(data.classManager)
-      player.data.classManager.setClassTree(createDefaultClassTree())
+      const classTree = createDefaultClassTree()
+      markRaw(classTree)
+      player.data.classManager.setClassTree(classTree)
     }
 
     return player

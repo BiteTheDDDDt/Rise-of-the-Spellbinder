@@ -485,7 +485,11 @@ export class ClassManager {
 
   static fromJSON(data: any): ClassManager {
     const manager = new ClassManager()
-    manager.unlockedClasses = data.unlockedClasses || []
+    // 清空并重新填充响应式数组
+    manager.unlockedClasses.length = 0
+    if (data.unlockedClasses && Array.isArray(data.unlockedClasses)) {
+      manager.unlockedClasses.push(...data.unlockedClasses)
+    }
     return manager
   }
 }

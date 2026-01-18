@@ -31,7 +31,7 @@ const playerState = computed(() => {
     skills: skillMap,
     level: game.player.value?.level || 1,
     gold: game.player.value?.resourceManager.getResource('gold')?.value || 0,
-    unlockedClasses: game.player.value?.getUnlockedClasses?.() || []
+    unlockedClasses: game.player.value?.getUnlockedClasses() || []
   }
 })
 

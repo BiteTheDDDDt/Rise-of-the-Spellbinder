@@ -40,7 +40,7 @@ export class ClassNode {
   data: ClassNodeData
 
   constructor(data: ClassNodeData) {
-    this.data = reactive({ ...data })
+    this.data = { ...data }
   }
 
   get id(): ClassId {
@@ -154,8 +154,8 @@ export class ClassTree {
   achievements: ClassId[]
 
   constructor() {
-    this.nodes = reactive(new Map())
-    this.edges = reactive(new Map())
+    this.nodes = new Map()
+    this.edges = new Map()
     this.achievements = reactive([])
     console.log('[ClassTree] Constructor called, nodes initialized')
   }

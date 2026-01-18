@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { reactive, markRaw } from 'vue'
 import { Talent } from '../systems/talent'
 import { ResourceManager, type ResourceId } from '../systems/resource'
 import { SkillManager } from '../systems/skill'
@@ -39,6 +39,9 @@ export class Player {
       const classManager = new ClassManager()
       classManager.setClassTree(createDefaultClassTree())
       simpleClassManager.init()
+
+      // 标记 classManager 为非响应式，因为职业树数据量很大且不需要响应式
+      markRaw(classManager)
 
       this.data = reactive({
         name,

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { gameState, saveSystem } from '../../core'
 import { Player } from '../../entities/player'
 import { ActivityRunner } from '../../systems/activity'
 import type { Element } from '../../systems/talent'
+
+const { t } = useI18n()
 
 const step = ref(1) // 1: 名称输入, 2: 元素选择, 3: 确认
 const characterName = ref('')
@@ -13,17 +16,17 @@ const spellDefinitions = ref<any[]>([])
 const elements: Element[] = ['fire', 'water', 'earth', 'wind']
 
 const origins: { id: Element, name: string, icon: string, color: string }[] = [
-  { id: 'fire', name: '火国', icon: '🔥', color: '#ff5722' },
-  { id: 'water', name: '水国', icon: '💧', color: '#2196f3' },
-  { id: 'earth', name: '土国', icon: '⛰️', color: '#795548' },
-  { id: 'wind', name: '风国', icon: '🌪️', color: '#4caf50' }
+  { id: 'fire', name: t('origin.fire'), icon: '🔥', color: '#ff5722' },
+  { id: 'water', name: t('origin.water'), icon: '💧', color: '#2196f3' },
+  { id: 'earth', name: t('origin.earth'), icon: '⛰️', color: '#795548' },
+  { id: 'wind', name: t('origin.wind'), icon: '🌪️', color: '#4caf50' }
 ]
 
 const originDescriptions: Record<Element, string> = {
-  fire: '火国居民天生具有强大的火焰亲和力，擅长攻击性法术和能量操控。',
-  water: '水国居民掌握水流与治愈之力，善于恢复和防御魔法。',
-  earth: '土国居民与大地的联系深厚，精通防御和召唤法术。',
-  wind: '风国居民敏捷且自由，擅长速度和辅助性魔法。'
+  fire: t('origin.fireDesc'),
+  water: t('origin.waterDesc'),
+  earth: t('origin.earthDesc'),
+  wind: t('origin.windDesc')
 }
 
 const talentPresets: Record<Element, Record<Element, number>> = {
@@ -69,7 +72,7 @@ function prevStep() {
 
 function createCharacter() {
   if (!characterName.value.trim()) {
-    alert('请输入角色名称')
+    alert(t('ui.enterName'))
     return
   }
 
@@ -155,7 +158,7 @@ const emit = defineEmits<{
             id="character-name"
             type="text"
             v-model="characterName"
-            placeholder="请输入你的角色名"
+            :placeholder="t('ui.namePlaceholder')"
             maxlength="20"
             class="name-input"
           />

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import type { Achievement, AchievementType } from '../../systems/achievement'
 import AchievementPopup from '../components/AchievementPopup.vue'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
+const { t } = useI18n()
 const achievements = ref<Achievement[]>([])
 const achievementDefinitions = ref<any[]>([])
 const selectedCategory = ref<string>('all')
@@ -13,6 +15,10 @@ const selectedType = ref<AchievementType | 'all'>('all')
 const unlockedAchievements = ref<Achievement[]>([])
 const recentUnlocked = ref<Achievement[]>([])
 const showHidden = ref(false)
+
+function getAchievementName(id: string, fallback: string): string {
+  return t(`achievement.${id}`, fallback)
+}
 
 // Load achievement definitions
 onMounted(async () => {
@@ -102,26 +108,26 @@ const completionRate = computed(() => {
 })
 
 const typeLabels: Record<AchievementType | 'all', string> = {
-  skill: '技能',
-  spell: '法术',
-  activity: '活动',
-  resource: '资源',
-  time: '时间',
-  misc: '其他',
-  all: '全部'
+  skill: t('achievementCategory.skill'),
+  spell: t('achievementCategory.spell'),
+  activity: t('achievementCategory.activity'),
+  resource: t('achievementCategory.resource'),
+  time: t('achievementCategory.time'),
+  misc: t('achievementCategory.secret'),
+  all: t('common.all')
 }
 
 const categoryLabels: Record<string, string> = {
-  all: '全部',
-  beginner: '新手',
-  skill: '技能',
-  spell: '法术',
-  activity: '活动',
-  resource: '资源',
-  element: '元素',
-  progress: '进度',
-  time: '时间',
-  secret: '秘密'
+  all: t('achievementCategory.all'),
+  beginner: t('achievementCategory.beginner'),
+  skill: t('achievementCategory.skill'),
+  spell: t('achievementCategory.spell'),
+  activity: t('achievementCategory.activity'),
+  resource: t('achievementCategory.resource'),
+  element: t('achievementCategory.element'),
+  progress: t('achievementCategory.progress'),
+  time: t('achievementCategory.time'),
+  secret: t('achievementCategory.secret')
 }
 
 
@@ -194,8 +200,8 @@ function getTypeIcon(type: AchievementType): string {
         <div v-for="achievement in recentUnlocked.slice(0, 3)" :key="achievement.id" class="recent-card">
           <div class="recent-icon">{{ achievement.icon }}</div>
           <div class="recent-details">
-            <div class="recent-name">{{ achievement.name }}</div>
-            <div class="recent-time">刚刚解锁</div>
+            <div class="recent-name">{{ getAchievementName(achievement.id, achievement.name) }}</div>
+            <div class="recent-time">{{ t('ui.recentUnlocks') }}</div>
           </div>
         </div>
       </div>

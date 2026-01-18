@@ -5,7 +5,7 @@ import { saveSystem, gameState } from '../../core'
 import { setLocale as setI18nLocale } from '../../i18n'
 import { ref } from 'vue'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const game = useGame()
 
 const languages = [
@@ -25,14 +25,14 @@ const autoSaveInterval = ref(30) // 秒
 
 function handleSave() {
   saveSystem.saveToLocalStorage()
-  alert('游戏已保存！')
+  alert(t('ui.saveSuccess'))
 }
 
 function handleLoad() {
   if (saveSystem.loadFromLocalStorage()) {
-    alert('游戏已加载！')
+    alert(t('ui.loadSuccess'))
   } else {
-    alert('未找到存档')
+    alert(t('ui.noSave'))
   }
 }
 
@@ -56,9 +56,9 @@ function handleImport(event: Event) {
   reader.onload = (e) => {
     const result = e.target?.result as string
     if (saveSystem.importSave(result)) {
-      alert('存档导入成功！')
+      alert(t('ui.importSuccess'))
     } else {
-      alert('导入存档失败')
+      alert(t('ui.importFailed'))
     }
   }
   reader.readAsText(file)
@@ -74,9 +74,9 @@ function handleLanguageSelect(langCode: string) {
 }
 
 function resetGame() {
-  if (confirm('确定要重置游戏吗？这将删除所有进度并重新开始。此操作不可撤销。')) {
+  if (confirm(t('ui.resetConfirm'))) {
     gameState.reset()
-    alert('游戏已重置')
+    alert(t('ui.resetSuccess'))
   }
 }
 </script>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import type { ActivityData } from '../../systems/activity'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
+const { t } = useI18n()
 const activities = ref<ActivityData[]>([])
+
 
 // Load activities data
 onMounted(async () => {
@@ -97,7 +100,7 @@ const toggleActivityRepeat = (activityId: string) => {
               </div>
             </div>
             <button @click="toggleActivityRepeat(activity.id)" :class="['btn repeat-btn', { active: isActivityRepeating(activity.id) }]">
-              {{ isActivityRepeating(activity.id) ? '取消重复' : '重复' }}
+              {{ isActivityRepeating(activity.id) ? t('ui.cancelRepeat') : t('ui.repeat') }}
             </button>
             <button @click="startActivity(activity)" class="btn start-btn">开始</button>
           </div>

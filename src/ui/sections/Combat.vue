@@ -189,7 +189,7 @@ onUnmounted(() => {
     <div v-else class="combat-container">
       <!-- 玩家状态 -->
       <div class="player-status">
-        <h3>{{ game.player.value?.name || '玩家' }}</h3>
+        <h3>{{ game.player.value?.name || t('ui.player') }}</h3>
         <div class="health-bar">
           <div class="health-label">生命值: {{ playerHealth.current }} / {{ playerHealth.max }}</div>
           <div class="bar-container">
@@ -211,7 +211,7 @@ onUnmounted(() => {
       <!-- 战斗控制 -->
       <div class="combat-controls">
         <div class="turn-indicator">
-          当前回合: <span :class="currentTurn">{{ currentTurn === 'player' ? '玩家回合' : '怪物回合' }}</span>
+          {{ t('ui.turn') }}: <span :class="currentTurn">{{ currentTurn === 'player' ? t('ui.playerTurn') : t('ui.monsterTurn') }}</span>
         </div>
         
         <div class="action-buttons">
@@ -252,7 +252,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div class="monster-status" :class="{ alive: monster.isAlive, dead: !monster.isAlive }">
-              {{ monster.isAlive ? '存活' : '已击败' }}
+              {{ monster.isAlive ? t('common.alive') : t('common.defeated') }}
             </div>
           </div>
         </div>

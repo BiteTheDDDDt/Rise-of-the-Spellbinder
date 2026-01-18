@@ -33,9 +33,11 @@ export class Player {
       const skillManager = new SkillManager(achievementManager)
       const spellManager = new SpellManager(achievementManager)
       const inventory = new Inventory()
+
       const classManager = new ClassManager()
-      const classTree = createDefaultClassTree()
-      classManager.setClassTree(classTree)
+      // Temporarily disable class tree to test performance
+      // const classTree = createDefaultClassTree()
+      // classManager.setClassTree(classTree)
 
       this.data = reactive({
         name,

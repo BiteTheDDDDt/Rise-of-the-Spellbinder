@@ -186,8 +186,3 @@ export class SaveSystem {
 
 // Create singleton instance
 export const saveSystem = new SaveSystem()
-
-// Auto-load on startup if save exists (but skip if definitions aren't loaded yet)
-if (saveSystem.hasSave() && !saveSystem.skipAutoLoad) {
-  saveSystem.loadFromLocalStorage()
-}

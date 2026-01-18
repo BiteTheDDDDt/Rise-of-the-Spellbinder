@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { gameState } from '../../core'
+import { gameState, saveSystem } from '../../core'
 import { Player } from '../../entities/player'
+import { ActivityRunner } from '../../systems/activity'
 import type { Element } from '../../systems/talent'
 
 const step = ref(1) // 1: 名称输入, 2: 元素选择, 3: 确认
@@ -78,6 +79,18 @@ function createCharacter() {
   gameState.data.isPaused = false
   gameState.data.lastUpdate = Date.now()
   gameState.data.hasStarted = true
+
+  // 重置 activityRunner
+  gameState.data.activityRunner = new ActivityRunner(
+    newPlayer.achievementManager,
+    newPlayer.resourceManager
+  )
+
+  // 重新连接活动回调
+  gameState.reconnectActivityCallbacks()
+
+  // 删除旧存档
+  saveSystem.deleteSave()
 
   // 触发游戏开始事件
   console.log(`新角色创建: ${characterName.value} (${selectedOrigin.value})`)

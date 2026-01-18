@@ -5,8 +5,6 @@ import { SkillManager } from '../systems/skill'
 import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
-import { ClassManager } from '../systems/class'
-import { createDefaultClassTree } from '../systems/classData'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -19,7 +17,6 @@ export interface PlayerData {
   spellManager: SpellManager
   achievementManager: AchievementManager
   inventory: Inventory
-  classManager: any
 }
 
 export class Player {
@@ -34,21 +31,16 @@ export class Player {
       const spellManager = new SpellManager(achievementManager)
       const inventory = new Inventory()
 
-      const classManager = new ClassManager()
-      const classTree = createDefaultClassTree()
-      classManager.setClassTree(classTree)
-
       this.data = reactive({
         name,
-        level: 1,
+        level:1,
         experience: 0,
         talent,
         resourceManager,
         skillManager,
         spellManager,
         achievementManager,
-        inventory,
-        classManager
+        inventory
       })
 
       this.applyTalentBonuses()
@@ -113,10 +105,6 @@ export class Player {
 
   get inventory(): Inventory {
     return this.data.inventory
-  }
-
-  get classManager(): ClassManager {
-    return this.data.classManager
   }
 
   addExperience(amount: number) {
@@ -188,8 +176,7 @@ export class Player {
       skills: this.data.skillManager.toJSON(),
       spells: this.data.spellManager.toJSON(),
       achievements: this.data.achievementManager.toJSON(),
-      inventory: this.data.inventory.toJSON(),
-      classes: this.data.classManager.toJSON()
+      inventory: this.data.inventory.toJSON()
     }
   }
 
@@ -413,12 +400,6 @@ export class Player {
     // Load inventory if data exists
     if (data.inventory && itemManager) {
       player.data.inventory = Inventory.fromJSON(data.inventory, itemManager)
-    }
-
-    // Load class manager data
-    if (data.classes) {
-      player.data.classManager = ClassManager.fromJSON(data.classes)
-      player.data.classManager.setClassTree(createDefaultClassTree())
     }
 
     player.applyTalentBonuses()

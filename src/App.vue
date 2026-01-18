@@ -236,7 +236,11 @@ watch(() => game.state.hasStarted, (hasStarted) => {
               {{ lang.label }}
             </button>
           </div>
-          <div class="git-info" :title="`${gitInfo.commitMessage} (${formatGitDate(gitInfo.commitDate)})`">
+          <div 
+            class="git-info" 
+            :title="`${gitInfo.commitMessage} (${formatGitDate(gitInfo.commitDate)})`"
+            @click="window.open('https://github.com/BiteTheDDDDt/Rise-of-the-Spellbinder', '_blank')"
+          >
             <span class="git-hash">{{ gitInfo.commitShortHash }}</span>
             <span class="git-branch">{{ gitInfo.branch }}</span>
           </div>
@@ -440,13 +444,14 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   border-radius: 6px;
   padding: 6px 10px;
   font-size: 0.8rem;
-  cursor: help;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
 .git-info:hover {
   background: #333;
   border-color: #666;
+  text-decoration: underline;
 }
 
 .git-hash {

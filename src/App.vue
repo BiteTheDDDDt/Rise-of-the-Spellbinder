@@ -19,6 +19,7 @@ import Combat from './ui/sections/Combat.vue'
 import Inventory from './ui/sections/Inventory.vue'
 import Shop from './ui/sections/Shop.vue'
 import { logSystem } from './systems/log'
+import { gitInfo } from './utils/git-info'
 
 const { t, locale } = useI18n()
 const game = useGame()
@@ -27,6 +28,11 @@ const languages = [
   { code: 'en-US', label: 'English' },
   { code: 'zh-CN', label: '中文' }
 ]
+
+const formatGitDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
 const activeMenu = ref('activities')
 const menuItems = ref<Array<{id: string, icon: string, label: string}>>([])
@@ -225,6 +231,10 @@ watch(() => game.state.hasStarted, (hasStarted) => {
               {{ lang.label }}
             </option>
           </select>
+          <div class="git-info" :title="`${gitInfo.commitMessage} (${formatGitDate(gitInfo.commitDate)})`">
+            <span class="git-hash">{{ gitInfo.commitShortHash }}</span>
+            <span class="git-branch">{{ gitInfo.branch }}</span>
+          </div>
           <div class="save-buttons">
             <button @click="handleSave" class="btn">💾 {{ t('common.save') }}</button>
             <button @click="handleLoad" class="btn">📂 {{ t('common.load') }}</button>
@@ -414,6 +424,35 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.git-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #252525;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.git-info:hover {
+  background: #333;
+  border-color: #666;
+}
+
+.git-hash {
+  color: #bb86fc;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.git-branch {
+  color: #03dac6;
+  font-size: 0.75rem;
 }
 
 .lang-select {

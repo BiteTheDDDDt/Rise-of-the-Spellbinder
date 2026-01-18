@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGame } from '../../core/useGame'
 import { definitionsManager } from '../../core'
 import type { Element } from '../../systems/talent'
@@ -8,9 +9,14 @@ import { LearningActivityFactory } from '../../systems/learningActivity'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
+const { t } = useI18n()
 const spells = ref<Spell[]>([])
 const spellDefinitions = ref<any[]>([])
 const selectedElement = ref<Element | 'all'>('all')
+
+function getSpellName(id: string, fallback: string): string {
+  return t(`spell.${id}`, fallback)
+}
 
 // Load spell definitions
 onMounted(async () => {
@@ -201,7 +207,7 @@ function startSpellLearning(spellId: string) {
   // 开始活动
   const success = game.activityRunner.value.startActivity(learningActivity)
   if (!success) {
-    alert(`无法开始学习: ${spellDef.name}\n资源不足`)
+    alert(`无法开始学习: ${getSpellName(spellDef.id, spellDef.name)}\n资源不足`)
   }
 }
 
@@ -260,7 +266,7 @@ function castSpell(spellId: string) {
       <div v-if="learnedSpells.length > 0" class="spell-grid">
         <div v-for="spell in learnedSpells" :key="spell.id" class="spell-card learned">
           <div class="spell-header">
-            <h4 class="spell-name">{{ spell.name }}</h4>
+            <h4 class="spell-name">{{ getSpellName(spell.id, spell.name) }}</h4>
             <div class="spell-meta">
               <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
                 <span class="spell-element" :class="spell.element">
@@ -322,7 +328,7 @@ function castSpell(spellId: string) {
       <div v-if="learnableSpells.length > 0" class="spell-grid">
         <div v-for="spell in learnableSpells" :key="spell.id" class="spell-card learnable">
           <div class="spell-header">
-            <h4 class="spell-name">{{ spell.name }}</h4>
+            <h4 class="spell-name">{{ getSpellName(spell.id, spell.name) }}</h4>
             <div class="spell-meta">
               <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
                 <span class="spell-element" :class="spell.element">
@@ -383,7 +389,7 @@ function castSpell(spellId: string) {
       <div v-if="filteredSpells.length > 0" class="spell-grid">
         <div v-for="spell in filteredSpells" :key="spell.id" class="spell-card all">
           <div class="spell-header">
-            <h4 class="spell-name">{{ spell.name }}</h4>
+            <h4 class="spell-name">{{ getSpellName(spell.id, spell.name) }}</h4>
             <div class="spell-meta">
               <Tooltip :content="elementDescriptions[spell.element as Element]" position="top" :delay="200">
                 <span class="spell-element" :class="spell.element">

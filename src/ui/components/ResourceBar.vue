@@ -1,21 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGame } from '../../core/useGame'
+import { useI18n } from 'vue-i18n'
 import type { ResourceId } from '../../systems/resource'
 import Tooltip from './Tooltip.vue'
 
 const game = useGame()
-
-const resourceDescriptions: Record<ResourceId, string> = {
-  gold: '通用货币，用于购买物品和升级',
-  research: '研究点数，用于解锁新技术和法术',
-  mana_fire: '火元素魔力，用于施放火系法术',
-  mana_water: '水元素魔力，用于施放水系法术',
-  mana_earth: '土元素魔力，用于施放土系法术',
-  mana_wind: '风元素魔力，用于施放风系法术',
-  health: '生命值，归零则死亡',
-  stamina: '耐力，用于探索和战斗'
-}
+const { t } = useI18n()
 
 const resources = computed(() => {
   const manager = game.resourceManager.value
@@ -23,6 +14,14 @@ const resources = computed(() => {
   const ids: ResourceId[] = ['gold', 'research', 'mana_fire', 'mana_water', 'mana_earth', 'mana_wind']
   return ids.map(id => manager.getResource(id)).filter((r): r is NonNullable<typeof r> => r !== undefined)
 })
+
+function getResourceName(id: ResourceId, fallback: string): string {
+  return t(`resource.${id}`, fallback)
+}
+
+function getResourceDescription(id: ResourceId): string {
+  return t(`resourceDesc.${id}`, '')
+}
 </script>
 
 <template>
@@ -30,13 +29,13 @@ const resources = computed(() => {
     <Tooltip
       v-for="resource in resources"
       :key="resource.data.id"
-      :content="resourceDescriptions[resource.data.id]"
+      :content="getResourceDescription(resource.data.id)"
       position="bottom"
       :delay="200"
     >
       <div class="resource-item">
         <div class="resource-header">
-          <span class="resource-name">{{ resource.data.name }}</span>
+          <span class="resource-name">{{ getResourceName(resource.data.id, resource.data.name) }}</span>
           <span class="resource-values">
             {{ Math.floor(resource.value) }} / {{ resource.max === Infinity ? '∞' : Math.floor(resource.max) }}
           </span>

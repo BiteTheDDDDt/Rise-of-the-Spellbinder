@@ -28,6 +28,15 @@ const languages = [
   { code: 'zh-CN', label: '中文' }
 ]
 
+// Handle language change
+function handleLanguageChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newLocale = target.value as 'en-US' | 'zh-CN'
+  if (newLocale && newLocale !== locale.value) {
+    locale.value = newLocale
+  }
+}
+
 const activeMenu = ref('activities')
 const menuItems = ref<Array<{id: string, icon: string, label: string}>>([])
 const currentView = ref(game.state.hasStarted ? 'main' : 'start')
@@ -220,7 +229,7 @@ watch(() => game.state.hasStarted, (hasStarted) => {
           </div>
         </div>
         <div class="top-right">
-          <select v-model="locale" class="lang-select">
+          <select :value="locale" @change="handleLanguageChange" class="lang-select">
             <option v-for="lang in languages" :key="lang.code" :value="lang.code">
               {{ lang.label }}
             </option>

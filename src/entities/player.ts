@@ -5,6 +5,8 @@ import { SkillManager } from '../systems/skill'
 import { SpellManager } from '../systems/spell'
 import { AchievementManager } from '../systems/achievement'
 import { Inventory } from '../systems/inventory'
+import { ClassManager } from '../systems/class'
+import { createDefaultClassTree } from '../systems/classData'
 import { logSystem } from '../systems/log'
 
 export interface PlayerData {
@@ -17,6 +19,7 @@ export interface PlayerData {
   spellManager: SpellManager
   achievementManager: AchievementManager
   inventory: Inventory
+  classManager: any
 }
 
 export class Player {
@@ -29,7 +32,9 @@ export class Player {
     const skillManager = new SkillManager(achievementManager)
     const spellManager = new SpellManager(achievementManager)
     const inventory = new Inventory()
-    
+    const classManager = new ClassManager()
+    classManager.setClassTree(createDefaultClassTree())
+
     this.data = reactive({
       name,
       level: 1,
@@ -39,7 +44,8 @@ export class Player {
       skillManager,
       spellManager,
       achievementManager,
-      inventory
+      inventory,
+      classManager
     })
 
     this.applyTalentBonuses()
@@ -100,6 +106,10 @@ export class Player {
 
   get inventory(): Inventory {
     return this.data.inventory
+  }
+
+  get classManager(): ClassManager {
+    return this.data.classManager
   }
 
   addExperience(amount: number) {
@@ -171,7 +181,8 @@ export class Player {
       skills: this.data.skillManager.toJSON(),
       spells: this.data.spellManager.toJSON(),
       achievements: this.data.achievementManager.toJSON(),
-      inventory: this.data.inventory.toJSON()
+      inventory: this.data.inventory.toJSON(),
+      classes: this.data.classManager.toJSON()
     }
   }
 
@@ -375,28 +386,34 @@ export class Player {
     player.data.experience = data.experience || 0
     player.data.talent = Talent.fromJSON(data.talent || {})
     player.data.resourceManager = ResourceManager.fromJSON(data.resources || {})
-    
+
     if (data.achievements && achievementDefinitions) {
       player.data.achievementManager = AchievementManager.fromJSON(data.achievements, achievementDefinitions)
     }
-    
+
     if (data.skills && skillDefinitions) {
       player.data.skillManager = SkillManager.fromJSON(data.skills, skillDefinitions)
       // Update skill manager's achievement manager reference
       player.data.skillManager.achievementManager = player.data.achievementManager
     }
-    
+
     if (data.spells && spellDefinitions) {
       player.data.spellManager = SpellManager.fromJSON(data.spells, spellDefinitions)
       // Update spell manager's achievement manager reference
       player.data.spellManager.achievementManager = player.data.achievementManager
     }
-    
+
     // Load inventory if data exists
     if (data.inventory && itemManager) {
       player.data.inventory = Inventory.fromJSON(data.inventory, itemManager)
     }
-    
+
+    // Load class manager data
+    if (data.classes) {
+      player.data.classManager = ClassManager.fromJSON(data.classes)
+      player.data.classManager.setClassTree(createDefaultClassTree())
+    }
+
     player.applyTalentBonuses()
     return player
   }

@@ -23,6 +23,12 @@ const selectedNumberFormat = ref('default')
 const autoSaveEnabled = ref(true)
 const autoSaveInterval = ref(30) // 秒
 
+function handleNumberFormatChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newFormat = target.value as 'default' | 'compact' | 'formatted'
+  selectedNumberFormat.value = newFormat
+}
+
 function handleSave() {
   saveSystem.saveToLocalStorage()
   alert('游戏已保存！')
@@ -108,8 +114,13 @@ function resetGame() {
         <h3>📊 显示</h3>
         <div class="setting-item">
           <label for="number-format">数字格式:</label>
-          <select id="number-format" v-model="selectedNumberFormat" class="setting-select">
-            <option v-for="format in numberFormats" :key="format.id" :value="format.id">
+          <select id="number-format" :value="selectedNumberFormat" @change="handleNumberFormatChange" class="setting-select">
+            <option 
+              v-for="format in numberFormats" 
+              :key="format.id" 
+              :value="format.id"
+              :selected="selectedNumberFormat === format.id"
+            >
               {{ format.label }}
             </option>
           </select>

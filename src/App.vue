@@ -234,7 +234,12 @@ watch(() => game.state.hasStarted, (hasStarted) => {
         </div>
         <div class="top-right">
           <select :value="locale" @change="handleLanguageChange" class="lang-select">
-            <option v-for="lang in languages" :key="lang.code" :value="lang.code">
+            <option 
+              v-for="lang in languages" 
+              :key="lang.code" 
+              :value="lang.code"
+              :selected="locale === lang.code"
+            >
               {{ lang.label }}
             </option>
           </select>

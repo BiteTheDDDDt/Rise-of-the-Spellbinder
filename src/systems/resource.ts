@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 
-export type ResourceId = 'gold' | 'research' | 'mana_fire' | 'mana_water' | 'mana_earth' | 'mana_wind'
+export type ResourceId = 'gold' | 'research' | 'mana_fire' | 'mana_water' | 'mana_earth' | 'mana_wind' | 'health' | 'stamina'
 
 export interface ResourceData {
   id: ResourceId
@@ -76,13 +76,19 @@ export class Resource {
     return {
       id: this.data.id,
       value: this.data.value,
-      max: this.data.max,
+      max: this.data.max === Infinity ? null : this.data.max,
       ratePerSecond: this.data.ratePerSecond
     }
   }
 
   static fromJSON(data: any): Resource {
-    const resource = new Resource(data.id, data.name || data.id, data.value, data.max, data.ratePerSecond)
+    let max = data.max
+    if (max === null || max === undefined || max === 'Infinity') {
+      max = Infinity
+    } else if (typeof max === 'string' && !isNaN(Number(max))) {
+      max = Number(max)
+    }
+    const resource = new Resource(data.id, data.name || data.id, data.value, max, data.ratePerSecond)
     return resource
   }
 }
@@ -117,12 +123,12 @@ export class ResourceManager {
   }
 
   static fromJSON(data: Record<string, any>): ResourceManager {
-    const manager = new ResourceManager()
+    const manager = ResourceManager.createDefault()
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
         const resData = data[key]
         const resource = Resource.fromJSON({ ...resData, id: key })
-        manager.addResource(resource)
+        manager.addResource(resource) // Overwrites existing resource with same id
       }
     }
     return manager
@@ -136,6 +142,8 @@ export class ResourceManager {
     manager.addResource(new Resource('mana_water', 'Water Mana', 0, 100, 0))
     manager.addResource(new Resource('mana_earth', 'Earth Mana', 0, 100, 0))
     manager.addResource(new Resource('mana_wind', 'Wind Mana', 0, 100, 0))
+    manager.addResource(new Resource('health', 'Health', 100, 100, 0))
+    manager.addResource(new Resource('stamina', 'Stamina', 50, 100, 0.1))
     return manager
   }
 }

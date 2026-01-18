@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { Element } from '../../systems/talent'
 import type { Skill } from '../../systems/skill'
+import { LearningActivityFactory } from '../../systems/learningActivity'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
@@ -87,9 +88,19 @@ function startSkillPractice(skillId: string) {
   const skill = game.player.value.skillManager.getSkill(skillId)
   if (!skill) return
   
-  // This would need to create a practice activity
-  console.log(`Starting practice for ${skill.name}`)
-  // TODO: Implement practice activity creation
+  // 获取玩家天赋等级
+  const player = game.player.value
+  const talent = player.talent
+  const talentLevel = (skill.element !== 'neutral' ? talent.get(skill.element as Element) : 0) || 0
+  
+  // 创建练习活动
+  const practiceActivity = LearningActivityFactory.createSkillPracticeActivity(skill as any, talentLevel)
+  
+  // 开始活动
+  const success = game.activityRunner.value.startActivity(practiceActivity)
+  if (!success) {
+    alert(`无法开始练习: ${skill.name}\n资源不足`)
+  }
 }
 
 function unlockSkill(skillId: string) {

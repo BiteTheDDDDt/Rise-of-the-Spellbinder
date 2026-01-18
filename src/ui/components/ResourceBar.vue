@@ -12,7 +12,9 @@ const resourceDescriptions: Record<ResourceId, string> = {
   mana_fire: '火元素魔力，用于施放火系法术',
   mana_water: '水元素魔力，用于施放水系法术',
   mana_earth: '土元素魔力，用于施放土系法术',
-  mana_wind: '风元素魔力，用于施放风系法术'
+  mana_wind: '风元素魔力，用于施放风系法术',
+  health: '生命值，归零则死亡',
+  stamina: '耐力，用于探索和战斗'
 }
 
 const resources = computed(() => {

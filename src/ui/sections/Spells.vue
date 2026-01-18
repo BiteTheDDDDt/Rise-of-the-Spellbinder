@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
 import type { Element } from '../../systems/talent'
 import type { Spell } from '../../systems/spell'
+import { LearningActivityFactory } from '../../systems/learningActivity'
 import Tooltip from '../components/Tooltip.vue'
 
 const game = useGame()
@@ -184,9 +185,19 @@ function startSpellLearning(spellId: string) {
   const spellDef = spellDefinitions.value.find(s => s.id === spellId)
   if (!spellDef) return
   
-  // This would need to create a learning activity
-  console.log(`Starting learning for ${spellDef.name}`)
-  // TODO: Implement learning activity creation
+  // 获取玩家天赋等级
+  const player = game.player.value
+  const talent = player.talent
+  const talentLevel = talent.get(spellDef.element as Element) || 0
+  
+  // 创建学习活动
+  const learningActivity = LearningActivityFactory.createSpellLearningActivity(spellDef as any, talentLevel)
+  
+  // 开始活动
+  const success = game.activityRunner.value.startActivity(learningActivity)
+  if (!success) {
+    alert(`无法开始学习: ${spellDef.name}\n资源不足`)
+  }
 }
 
 

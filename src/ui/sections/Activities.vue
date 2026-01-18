@@ -13,7 +13,10 @@ fetch('/data/activities.json')
   .then(data => activities.value = data)
 
 function startActivity(activity: ActivityData) {
-  game.activityRunner.value.startActivity(activity)
+  const success = game.activityRunner.value.startActivity(activity)
+  if (!success) {
+    alert(`无法开始活动: ${activity.name}\n资源不足或成本扣除失败`)
+  }
 }
 
 function cancelActivity() {

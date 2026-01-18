@@ -13,6 +13,8 @@ import NewGame from './ui/sections/NewGame.vue'
 import Character from './ui/sections/Character.vue'
 import Settings from './ui/sections/Settings.vue'
 import GameLog from './ui/components/GameLog.vue'
+import Explore from './ui/sections/Explore.vue'
+import Combat from './ui/sections/Combat.vue'
 import { setLocale } from './i18n'
 import { logSystem } from './systems/log'
 
@@ -59,6 +61,8 @@ const updateMenuItems = () => {
     { id: 'activities', icon: '⚡', label: '活动' },
     { id: 'skills', icon: '📚', label: '技能' },
     { id: 'spells', icon: '✨', label: '法术' },
+    { id: 'explore', icon: '🗺️', label: '探索' },
+    { id: 'combat', icon: '⚔️', label: '战斗' },
     { id: 'character', icon: '👤', label: '角色' },
     { id: 'achievements', icon: '🏆', label: '成就' },
     { id: 'settings', icon: '⚙️', label: '设置' }
@@ -76,6 +80,15 @@ const updateMenuItems = () => {
       const unlockedAchievements = game.player.value?.achievementManager?.getUnlockedAchievements?.()
       return unlockedAchievements && unlockedAchievements.length > 0
     }
+    if (item.id === 'explore') {
+      // 检查是否学会任意攻击法术
+      const learnedSpells = game.player.value?.spellManager?.getLearnedSpells?.()
+      const hasAttackSpell = learnedSpells?.some(spell => 
+        spell.data.effects.some(effect => effect.type === 'damage')
+      )
+      return hasAttackSpell || false
+    }
+    // 战斗菜单始终解锁（但界面内会检查条件）
     // 默认解锁其他菜单
     return true
   })
@@ -234,6 +247,12 @@ watch(() => game.state.hasStarted, (hasStarted) => {
             </div>
             <div v-else-if="activeMenu === 'achievements'" class="achievements">
               <Achievements />
+            </div>
+            <div v-else-if="activeMenu === 'explore'" class="explore">
+              <Explore />
+            </div>
+            <div v-else-if="activeMenu === 'combat'" class="combat">
+              <Combat />
             </div>
             <div v-else-if="activeMenu === 'settings'" class="settings">
               <Settings />

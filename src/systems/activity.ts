@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import type { ResourceId } from './resource'
+import { ResourceManager } from './resource'
 import { logSystem } from './log'
 import type { AchievementManager } from './achievement'
 
@@ -45,13 +46,62 @@ export class ActivityRunner {
   queue: ActivityInstance[] = reactive([])
   onCompleteCallbacks: ActivityCompleteCallback[] = []
   achievementManager?: AchievementManager
+  resourceManager?: ResourceManager
 
-  constructor(achievementManager?: AchievementManager) {
+  constructor(achievementManager?: AchievementManager, resourceManager?: ResourceManager) {
     this.onCompleteCallbacks = []
     this.achievementManager = achievementManager
+    this.resourceManager = resourceManager
   }
 
-  startActivity(activity: ActivityData) {
+  canStartActivity(activity: ActivityData): boolean {
+    if (!activity.costs || activity.costs.length === 0) {
+      return true
+    }
+    if (!this.resourceManager) {
+      console.warn('ActivityRunner没有设置resourceManager，无法检查活动成本')
+      return true
+    }
+    for (const cost of activity.costs) {
+      const resource = this.resourceManager.getResource(cost.resource as ResourceId)
+      if (!resource || resource.value < cost.amount) {
+        return false
+      }
+    }
+    return true
+  }
+
+  deductActivityCosts(activity: ActivityData): boolean {
+    if (!activity.costs || activity.costs.length === 0) {
+      return true
+    }
+    if (!this.resourceManager) {
+      console.warn('ActivityRunner没有设置resourceManager，无法扣除活动成本')
+      return false
+    }
+    for (const cost of activity.costs) {
+      const resource = this.resourceManager.getResource(cost.resource as ResourceId)
+      if (!resource || !resource.consume(cost.amount)) {
+        // 回滚之前扣除的资源
+        console.error(`活动成本扣除失败: ${cost.resource} ${cost.amount}`)
+        return false
+      }
+    }
+    return true
+  }
+
+  startActivity(activity: ActivityData): boolean {
+    // 检查成本
+    if (!this.canStartActivity(activity)) {
+      logSystem.warning(`无法开始活动: ${activity.name}，资源不足`, { activityId: activity.id })
+      return false
+    }
+    // 扣除成本
+    if (!this.deductActivityCosts(activity)) {
+      logSystem.error(`活动成本扣除失败: ${activity.name}`, { activityId: activity.id })
+      return false
+    }
+    
     if (this.currentActivity) {
       this.queue.push({
         id: Date.now().toString(),
@@ -71,6 +121,7 @@ export class ActivityRunner {
       })
       logSystem.info(`活动开始: ${activity.name}`, { activityId: activity.id, duration: activity.duration })
     }
+    return true
   }
 
   update(currentTime: number) {

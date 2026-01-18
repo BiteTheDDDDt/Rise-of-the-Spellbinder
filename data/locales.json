@@ -1,0 +1,81 @@
+[
+  {
+    "id": "town_outskirts",
+    "name": "城镇外围",
+    "description": "城镇周边的安全区域，适合新手练习。偶尔会有小型怪物出没。",
+    "dangerLevel": 1,
+    "unlockCondition": "always",
+    "monsters": ["slime", "rat", "goblin_scout"],
+    "rewards": {
+      "gold": "5~15",
+      "experience": "10~20",
+      "mana_earth": "1~3"
+    },
+    "exploreDuration": 30,
+    "staminaCost": 5
+  },
+  {
+    "id": "abandoned_mine",
+    "name": "废弃矿洞",
+    "description": "黑暗的矿洞中充满了土系怪物。需要火系或风系法术应对。",
+    "dangerLevel": 3,
+    "unlockCondition": "has_attack_spell",
+    "monsters": ["stone_golem", "cave_bat", "earth_elemental", "rock_snake"],
+    "rewards": {
+      "gold": "15~30",
+      "experience": "30~50",
+      "mana_earth": "5~10",
+      "items": ["iron_ore", "copper_ore"]
+    },
+    "exploreDuration": 45,
+    "staminaCost": 10
+  },
+  {
+    "id": "lava_rift",
+    "name": "熔岩裂谷",
+    "description": "炽热的裂谷中流淌着熔岩，火系怪物在此肆虐。水系法术效果显著。",
+    "dangerLevel": 4,
+    "unlockCondition": "has_attack_spell && skill_level >= 10",
+    "monsters": ["fire_salamander", "lava_elemental", "fire_bat", "magma_worm"],
+    "rewards": {
+      "gold": "25~45",
+      "experience": "50~80",
+      "mana_fire": "8~15",
+      "items": ["fire_crystal", "obsidian_shard"]
+    },
+    "exploreDuration": 50,
+    "staminaCost": 12
+  },
+  {
+    "id": "misty_swamp",
+    "name": "迷雾沼泽",
+    "description": "浓雾弥漫的沼泽地，水系怪物潜伏在暗处。土系法术能有效克制它们。",
+    "dangerLevel": 3,
+    "unlockCondition": "has_attack_spell && skill_level >= 8",
+    "monsters": ["swamp_slime", "water_elemental", "bog_monster", "marsh_troll"],
+    "rewards": {
+      "gold": "20~40",
+      "experience": "40~70",
+      "mana_water": "6~12",
+      "items": ["water_orb", "herb_bundle"]
+    },
+    "exploreDuration": 40,
+    "staminaCost": 10
+  },
+  {
+    "id": "storm_plateau",
+    "name": "风暴高原",
+    "description": "狂风呼啸的高原，风系怪物在空中盘旋。火系法术能对它们造成额外伤害。",
+    "dangerLevel": 4,
+    "unlockCondition": "has_attack_spell && skill_level >= 12",
+    "monsters": ["storm_elemental", "wind_wyvern", "thunder_bird", "air_sprite"],
+    "rewards": {
+      "gold": "30~50",
+      "experience": "60~90",
+      "mana_wind": "10~18",
+      "items": ["wind_crystal", "feather_of_zephyr"]
+    },
+    "exploreDuration": 55,
+    "staminaCost": 15
+  }
+]

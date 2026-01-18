@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
+import { definitionsManager } from '../../core'
 import type { Element } from '../../systems/talent'
 import type { Skill } from '../../systems/skill'
 import { LearningActivityFactory } from '../../systems/learningActivity'
@@ -14,9 +15,13 @@ const selectedElement = ref<Element | 'neutral' | 'all'>('all')
 // Load skill definitions
 onMounted(async () => {
   try {
-    const response = await fetch('/data/skills.json')
-    const data = await response.json()
-    skillDefinitions.value = data.skills || []
+    // Ensure definitions are loaded
+    if (!definitionsManager.isLoaded()) {
+      await definitionsManager.loadAllDefinitions()
+    }
+    
+    const skillDefs = definitionsManager.getSkillDefinitions()
+    skillDefinitions.value = skillDefs
     
     // Register skill definitions to skill manager
     if (game.player.value.skillManager) {
@@ -50,11 +55,10 @@ const unlockedSkills = computed(() => {
 
 const lockedSkills = computed(() => {
   if (!game.player.value.skillManager) return []
-  const playerTalent = game.player.value?.talent?.data || { fire: 0, water: 0, earth: 0, wind: 0 }
-  return game.player.value.skillManager.getLockedSkills(playerTalent)
+  return game.player.value.skillManager.getLockedSkills()
 })
 
-const unlockableSkillIds = computed(() => new Set(lockedSkills.value.map(skill => skill.id)))
+
 
 const elements: Array<Element | 'neutral' | 'all'> = ['all', 'fire', 'water', 'earth', 'wind', 'neutral']
 
@@ -79,14 +83,20 @@ function getSkillEffectDescription(skill: any): string {
 }
 
 function canUnlockSkill(skill: any): boolean {
-  return unlockableSkillIds.value.has(skill.id)
+  if (!game.player.value.skillManager) return false
+  const playerTalent = game.player.value.talent.data
+  return game.player.value.skillManager.canUnlockSkill(skill.id, playerTalent)
 }
 
 function startSkillPractice(skillId: string) {
   if (!game.player.value.skillManager || !game.activityRunner.value) return
   
   const skill = game.player.value.skillManager.getSkill(skillId)
-  if (!skill) return
+  
+  if (!skill) {
+    alert(`技能未找到或尚未解锁: ${skillId}`)
+    return
+  }
   
   // 获取玩家天赋等级
   const player = game.player.value
@@ -103,14 +113,26 @@ function startSkillPractice(skillId: string) {
   }
 }
 
+function isSkillPracticeRepeating(skillId: string): boolean {
+  if (!game.activityRunner.value) return false
+  return game.activityRunner.value.repeatingActivities.has(`practice_${skillId}`)
+}
+
+function toggleSkillPracticeRepeat(skillId: string) {
+  if (!game.activityRunner.value) return
+  game.activityRunner.value.toggleRepeat(`practice_${skillId}`)
+}
+
 function unlockSkill(skillId: string) {
   if (!game.player.value.skillManager || !game.player.value) return
   
   const playerTalent = game.player.value.talent.data
   const success = game.player.value.skillManager.unlockSkill(skillId, playerTalent)
   if (success) {
-    console.log(`Unlocked skill ${skillId}`)
+    alert(`技能解锁成功！`)
     skills.value = game.player.value.skillManager.getAllSkills()
+  } else {
+    alert(`技能解锁失败，条件未满足。`)
   }
 }
 </script>
@@ -177,6 +199,13 @@ function unlockSkill(skillId: string) {
             :disabled="skill.isMaxed"
           >
             {{ skill.isMaxed ? '已满级' : '练习' }}
+          </button>
+          <button 
+            @click="toggleSkillPracticeRepeat(skill.id)" 
+            :class="['btn repeat-btn', { active: isSkillPracticeRepeating(skill.id) }]"
+            :disabled="skill.isMaxed"
+          >
+            {{ isSkillPracticeRepeating(skill.id) ? '取消重复' : '重复' }}
           </button>
         </div>
       </div>
@@ -457,6 +486,22 @@ function unlockSkill(skillId: string) {
 }
 
 .practice-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.repeat-btn {
+  background: #555;
+  color: white;
+}
+.repeat-btn.active {
+  background: #ff9800;
+  color: white;
+}
+.repeat-btn:hover:not(:disabled) {
+  background: #777;
+}
+.repeat-btn:disabled {
   background: #666;
   cursor: not-allowed;
 }

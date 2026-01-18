@@ -44,6 +44,7 @@ export type ActivityCompleteCallback = (instance: ActivityInstance) => void
 export class ActivityRunner {
   currentActivity: ActivityInstance | null = null
   queue: ActivityInstance[] = reactive([])
+  repeatingActivities: Set<string> = reactive(new Set())
   onCompleteCallbacks: ActivityCompleteCallback[] = []
   achievementManager?: AchievementManager
   resourceManager?: ResourceManager
@@ -52,6 +53,14 @@ export class ActivityRunner {
     this.onCompleteCallbacks = []
     this.achievementManager = achievementManager
     this.resourceManager = resourceManager
+  }
+
+  toggleRepeat(activityId: string) {
+    if (this.repeatingActivities.has(activityId)) {
+      this.repeatingActivities.delete(activityId)
+    } else {
+      this.repeatingActivities.add(activityId)
+    }
   }
 
   canStartActivity(activity: ActivityData): boolean {
@@ -147,7 +156,9 @@ export class ActivityRunner {
     logSystem.success(`活动完成: ${instance.activity.name}`, { 
       activityId: instance.activity.id,
       duration: instance.activity.duration,
-      rewards: instance.activity.rewards
+      rewards: instance.activity.rewards,
+      type: instance.activity.type,
+      metadata: instance.activity.metadata
     })
     
     // Track achievement progress
@@ -155,11 +166,35 @@ export class ActivityRunner {
       this.achievementManager.incrementAchievementProgress('activity_enthusiast')
     }
     
-    for (const callback of this.onCompleteCallbacks) {
-      callback(instance)
+    logSystem.info(`调用活动完成回调，共 ${this.onCompleteCallbacks.length} 个回调`, { activityId: instance.activity.id })
+    for (let i = 0; i < this.onCompleteCallbacks.length; i++) {
+      const callback = this.onCompleteCallbacks[i]
+      if (!callback) continue
+      
+      logSystem.info(`调用回调 ${i + 1}/${this.onCompleteCallbacks.length}`, { activityId: instance.activity.id })
+      try {
+        callback(instance)
+      } catch (error) {
+        logSystem.error(`活动完成回调执行错误: ${error}`, { activityId: instance.activity.id, error })
+      }
     }
     
+    const activityId = instance.activity.id
     this.currentActivity = null
+    
+    // 检查是否需要重复该活动
+    if (this.repeatingActivities.has(activityId)) {
+      logSystem.info(`活动 ${activityId} 设置为重复，检查是否可以重新开始`, { activityId })
+      if (this.canStartActivity(instance.activity)) {
+        logSystem.info(`重复活动: ${instance.activity.name}`, { activityId })
+        this.startActivity(instance.activity)
+      } else {
+        logSystem.warning(`无法重复活动 ${instance.activity.name}: 资源不足或成本扣除失败`, { activityId })
+      }
+    } else {
+      logSystem.info(`活动 ${activityId} 未设置为重复`, { activityId })
+    }
+    
     if (this.queue.length > 0) {
       this.currentActivity = this.queue.shift()!
     }
@@ -207,7 +242,8 @@ export class ActivityRunner {
   toJSON() {
     return {
       currentActivity: this.currentActivity,
-      queue: this.queue
+      queue: this.queue,
+      repeatingActivities: Array.from(this.repeatingActivities)
     }
   }
 
@@ -218,6 +254,9 @@ export class ActivityRunner {
     }
     if (data.queue) {
       runner.queue = reactive(data.queue)
+    }
+    if (data.repeatingActivities) {
+      runner.repeatingActivities = reactive(new Set(data.repeatingActivities))
     }
     return runner
   }

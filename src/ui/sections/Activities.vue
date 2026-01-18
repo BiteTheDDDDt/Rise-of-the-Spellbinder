@@ -33,6 +33,11 @@ function getActivityTooltip(activity: ActivityData): string {
   const costs = activity.costs ? activity.costs.map(c => `-${c.amount} ${c.resource}`).join(', ') : '无消耗'
   return `${activity.description}\n\n奖励: ${rewards}\n消耗: ${costs}`
 }
+
+const isActivityRepeating = (activityId: string) => game.activityRunner.value.repeatingActivities.has(activityId)
+const toggleActivityRepeat = (activityId: string) => {
+  game.activityRunner.value.toggleRepeat(activityId)
+}
 </script>
 
 <template>
@@ -81,6 +86,9 @@ function getActivityTooltip(activity: ActivityData): string {
                 </span>
               </div>
             </div>
+            <button @click="toggleActivityRepeat(activity.id)" :class="['btn repeat-btn', { active: isActivityRepeating(activity.id) }]">
+              {{ isActivityRepeating(activity.id) ? '取消重复' : '重复' }}
+            </button>
             <button @click="startActivity(activity)" class="btn start-btn">开始</button>
           </div>
         </Tooltip>
@@ -259,6 +267,14 @@ function getActivityTooltip(activity: ActivityData): string {
 
 .cancel-btn:hover {
   background: #d32f2f;
+}
+
+.repeat-btn {
+  background: #555;
+}
+.repeat-btn.active {
+  background: #ff9800;
+  color: white;
 }
 
 .start-btn {

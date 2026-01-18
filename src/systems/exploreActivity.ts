@@ -35,7 +35,7 @@ export class ExploreActivityFactory {
     }
 
     return {
-      id: `explore_${locale.id}_${Date.now()}`,
+      id: `explore_${locale.id}`,
       name: `探索${locale.name}`,
       description: locale.description,
       duration: locale.exploreDuration,

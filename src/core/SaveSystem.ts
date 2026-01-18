@@ -1,8 +1,9 @@
 import { gameState } from '.'
-
 import { Player } from '../entities/player'
 import { ActivityRunner } from '../systems/activity'
 import { logSystem } from '../systems/log'
+import { definitionsManager } from './Definitions'
+import { itemManager } from '../systems/item'
 
 export interface SaveData {
   version: string
@@ -25,6 +26,7 @@ export class SaveSystem {
   private autoSaveTimer: number | null = null
   // @ts-ignore
   private _lastSaveTime: number = 0
+  skipAutoLoad: boolean = false
 
   constructor() {
     this.setupAutoSave()
@@ -70,14 +72,29 @@ export class SaveSystem {
       state.lastUpdate = Date.now() // Reset lastUpdate to now
 
       if (data.player) {
-        state.player = Player.fromJSON(data.player)
+        // Get definitions for player loading
+        const skillDefinitions = definitionsManager.getSkillDefinitions()
+        const spellDefinitions = definitionsManager.getSpellDefinitions()
+        const achievementDefinitions = definitionsManager.getAchievementDefinitions()
+        
+        state.player = Player.fromJSON(
+          data.player,
+          skillDefinitions,
+          spellDefinitions,
+          achievementDefinitions,
+          itemManager
+        )
       }
       if (data.activityRunner) {
         state.activityRunner = ActivityRunner.fromJSON(data.activityRunner)
+        // 重新设置 achievementManager 和 resourceManager 引用
+        state.activityRunner.achievementManager = state.player.achievementManager
+        state.activityRunner.resourceManager = state.player.resourceManager
       }
+      // 重新连接活动回调
+      gameState.reconnectActivityCallbacks()
 
       logSystem.info('游戏数据加载成功')
-      console.log('Game loaded successfully')
       return true
     } catch (error) {
       logSystem.error('加载游戏数据失败', { error: String(error) })
@@ -150,12 +167,27 @@ export class SaveSystem {
       this.autoSaveTimer = null
     }
   }
+
+  disableAutoLoad() {
+    this.skipAutoLoad = true
+  }
+
+  enableAutoLoad() {
+    this.skipAutoLoad = false
+  }
+
+  loadIfSaveExists(): boolean {
+    if (this.hasSave()) {
+      return this.loadFromLocalStorage()
+    }
+    return false
+  }
 }
 
 // Create singleton instance
 export const saveSystem = new SaveSystem()
 
-// Auto-load on startup if save exists
-if (saveSystem.hasSave()) {
+// Auto-load on startup if save exists (but skip if definitions aren't loaded yet)
+if (saveSystem.hasSave() && !saveSystem.skipAutoLoad) {
   saveSystem.loadFromLocalStorage()
 }

@@ -77,7 +77,7 @@ export class Skill {
   }
 
   get isUnlocked(): boolean {
-    return this.currentLevel > 0
+    return true
   }
 
   get effects(): SkillEffect[] {
@@ -128,21 +128,7 @@ export class Skill {
     return effect.value * this.currentLevel
   }
 
-  canUnlock(playerTalent: Record<Element, number>): boolean {
-    if (!this.data.unlockCondition) return true
-    
-    try {
-      const condition = this.data.unlockCondition
-      const { fire = 0, water = 0, earth = 0, wind = 0 } = playerTalent
-      
-      // These variables are used in eval
-      void fire; void water; void earth; void wind;
-      
-      return eval(condition)
-    } catch {
-      return false
-    }
-  }
+
 
   toJSON() {
     return {
@@ -168,8 +154,8 @@ export class SkillManager {
   achievementManager: AchievementManager | undefined
 
   constructor(achievementManager?: AchievementManager) {
-    this.skills = new Map()
-    this.skillDefinitions = new Map()
+    this.skills = reactive(new Map())
+    this.skillDefinitions = reactive(new Map())
     this.achievementManager = achievementManager
   }
 
@@ -183,9 +169,12 @@ export class SkillManager {
 
     if (this.skills.has(skillId)) return true
 
-    const skill = new Skill(definition)
-    if (!skill.canUnlock(playerTalent)) return false
+    // Evaluate unlock condition
+    if (!this.evaluateUnlockCondition(definition.unlockCondition, playerTalent)) {
+      return false
+    }
 
+    const skill = new Skill(definition)
     this.skills.set(skillId, skill)
     logSystem.success(`技能解锁: ${skill.name}`, { skillId, element: skill.element })
     
@@ -196,6 +185,38 @@ export class SkillManager {
     }
     
     return true
+  }
+
+  canUnlockSkill(skillId: SkillId, playerTalent: Record<Element, number>): boolean {
+    const definition = this.skillDefinitions.get(skillId)
+    if (!definition) return false
+    if (this.skills.has(skillId)) return true
+    return this.evaluateUnlockCondition(definition.unlockCondition, playerTalent)
+  }
+
+  public evaluateUnlockCondition(condition: string | undefined, playerTalent: Record<Element, number>): boolean {
+    if (!condition || condition === 'true') return true
+    
+    try {
+      // Prepare variables for eval
+      const { fire = 0, water = 0, earth = 0, wind = 0 } = playerTalent
+      
+      // Get skill levels for skill references in condition
+      const skillLevels: Record<string, number> = {}
+      for (const [skillId, _definition] of this.skillDefinitions.entries()) {
+        const skill = this.skills.get(skillId)
+        skillLevels[skillId] = skill ? skill.currentLevel : 0
+      }
+      
+      // Combine all variables for eval
+      const allVars = { fire, water, earth, wind, ...skillLevels }
+      
+      // Create eval context with all variables
+      const evalFunc = new Function(...Object.keys(allVars), `return ${condition}`)
+      return evalFunc(...Object.values(allVars))
+    } catch {
+      return false
+    }
   }
 
   getSkill(skillId: SkillId): Skill | undefined {
@@ -210,14 +231,11 @@ export class SkillManager {
     return this.getAllSkills().filter(skill => skill.isUnlocked)
   }
 
-  getLockedSkills(playerTalent: Record<Element, number>): Omit<SkillData, 'currentLevel' | 'currentExp' | 'requiredExp'>[] {
+  getLockedSkills(): Omit<SkillData, 'currentLevel' | 'currentExp' | 'requiredExp'>[] {
     const locked: Omit<SkillData, 'currentLevel' | 'currentExp' | 'requiredExp'>[] = []
     for (const definition of this.skillDefinitions.values()) {
       if (!this.skills.has(definition.id)) {
-        const tempSkill = new Skill(definition)
-        if (!tempSkill.canUnlock(playerTalent)) {
-          locked.push(definition)
-        }
+        locked.push(definition)
       }
     }
     return locked
@@ -227,6 +245,8 @@ export class SkillManager {
     const skill = this.skills.get(skillId)
     if (skill) {
       skill.addExp(amount)
+    } else {
+      console.warn('[SkillManager] Skill not found:', skillId, 'Available skills:', Array.from(this.skills.keys()))
     }
   }
 

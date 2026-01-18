@@ -119,6 +119,18 @@ async function startExplore(localeId: string) {
   }
 }
 
+// 检查探索活动是否重复
+function isExploreRepeating(localeId: string): boolean {
+  if (!game.activityRunner.value) return false
+  return game.activityRunner.value.repeatingActivities.has(`explore_${localeId}`)
+}
+
+// 切换探索活动重复
+function toggleExploreRepeat(localeId: string) {
+  if (!game.activityRunner.value) return
+  game.activityRunner.value.toggleRepeat(`explore_${localeId}`)
+}
+
 // 获取地点危险等级颜色
 function getDangerColor(level: number): string {
   if (level <= 1) return '#4caf50' // 安全
@@ -257,13 +269,22 @@ onMounted(() => {
             </div>
             
             <div class="locale-footer">
-              <button
-                @click="startExplore(locale.id)"
-                class="btn explore-btn"
-                :disabled="!locale.discovered || !availableLocales.includes(locale)"
-              >
-                开始探索
-              </button>
+              <div class="locale-buttons">
+                <button
+                  @click="startExplore(locale.id)"
+                  class="btn explore-btn"
+                  :disabled="!locale.discovered || !availableLocales.includes(locale)"
+                >
+                  开始探索
+                </button>
+                <button 
+                  @click="toggleExploreRepeat(locale.id)" 
+                  :class="['btn repeat-btn', { active: isExploreRepeating(locale.id) }]"
+                  :disabled="!locale.discovered || !availableLocales.includes(locale)"
+                >
+                  {{ isExploreRepeating(locale.id) ? '取消重复' : '重复' }}
+                </button>
+              </div>
               
               <div class="locale-rewards">
                 <span class="rewards-label">可能奖励:</span>
@@ -539,7 +560,6 @@ onMounted(() => {
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 10px;
 }
 
 .explore-btn:hover:not(:disabled) {
@@ -549,6 +569,32 @@ onMounted(() => {
 
 .explore-btn:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.locale-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.locale-buttons .btn {
+  flex: 1;
+}
+
+.repeat-btn {
+  background: #555;
+  color: white;
+}
+.repeat-btn.active {
+  background: #ff9800;
+  color: white;
+}
+.repeat-btn:hover:not(:disabled) {
+  background: #777;
+}
+.repeat-btn:disabled {
+  background: #666;
   cursor: not-allowed;
 }
 

@@ -4,9 +4,7 @@ import type { Skill } from './skill'
 import type { Element } from './talent'
 
 export interface LearningActivityData extends ActivityData {
-  spellId?: string
-  skillId?: string
-  element?: Element
+  // 这些字段现在放在metadata中，保持接口兼容性
   cost: {
     resource: string
     amount: number
@@ -32,7 +30,10 @@ export class LearningActivityFactory {
         { resource: 'experience', amount: spell.level * 5 }
       ],
       category: 'learning',
-      spellId: spell.id
+      type: 'learning',
+      metadata: {
+        spellId: spell.id
+      }
     }
   }
 
@@ -50,7 +51,7 @@ export class LearningActivityFactory {
     }
     cost.push({ resource: 'gold', amount: skill.currentLevel })
 
-    return {
+    const activity = {
       id: `practice_${skill.id}`,
       name: `练习${skill.name}`,
       description: `通过练习提高${skill.name}技能：${skill.description}`,
@@ -61,9 +62,14 @@ export class LearningActivityFactory {
         { resource: 'experience', amount: 5 }
       ],
       category: 'training',
-      skillId: skill.id,
-      element: element as Element | undefined
+      type: 'practice',
+      metadata: {
+        skillId: skill.id,
+        element: element as Element | undefined
+      }
     }
+    
+    return activity as LearningActivityData
   }
 
   static createSkillTrainingActivity(skillId: string, skillName: string, element: Element | 'neutral', talentLevel: number): LearningActivityData {
@@ -91,39 +97,45 @@ export class LearningActivityFactory {
         { resource: 'experience', amount: 10 }
       ],
       category: 'training',
-      skillId,
-      element: element !== 'neutral' ? element as Element : undefined
+      type: 'training',
+      metadata: {
+        skillId,
+        element: element !== 'neutral' ? element as Element : undefined
+      }
     }
   }
 }
 
 export class LearningActivityManager {
   static completeSpellLearning(activity: LearningActivityData, spellManager: any, playerTalent: any, playerSkills: any): boolean {
-    if (!activity.spellId) return false
+    const spellId = activity.metadata?.spellId
+    if (!spellId) return false
 
-    const success = spellManager.learnSpell(activity.spellId, playerTalent, playerSkills)
+    const success = spellManager.learnSpell(spellId, playerTalent, playerSkills)
     return success
   }
 
   static completeSkillPractice(activity: LearningActivityData, skillManager: any): boolean {
-    if (!activity.skillId) return false
+    const skillId = activity.metadata?.skillId
+    if (!skillId) return false
 
-    const skill = skillManager.getSkill(activity.skillId)
+    const skill = skillManager.getSkill(skillId)
     if (!skill) return false
 
     const expGain = 50 + Math.floor(skill.currentLevel * 2)
-    skillManager.addExpToSkill(activity.skillId, expGain)
+    skillManager.addExpToSkill(skillId, expGain)
     return true
   }
 
   static completeSkillTraining(activity: LearningActivityData, skillManager: any, playerTalent: any): boolean {
-    if (!activity.skillId) return false
+    const skillId = activity.metadata?.skillId
+    if (!skillId) return false
 
-    const success = skillManager.unlockSkill(activity.skillId, playerTalent)
+    const success = skillManager.unlockSkill(skillId, playerTalent)
     if (success) {
-      const skill = skillManager.getSkill(activity.skillId)
+      const skill = skillManager.getSkill(skillId)
       if (skill) {
-        skillManager.addExpToSkill(activity.skillId, 100)
+        skillManager.addExpToSkill(skillId, 100)
       }
     }
     return success

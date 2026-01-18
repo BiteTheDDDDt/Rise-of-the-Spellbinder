@@ -1,6 +1,7 @@
 import { GameState } from './GameState'
 import { GameLoop } from './GameLoop'
 import { saveSystem, SaveSystem } from './SaveSystem'
+import { definitionsManager } from './Definitions'
 import { logSystem } from '../systems/log'
 
 // Create game state instance
@@ -11,7 +12,7 @@ export const gameLoop = new GameLoop(gameState)
 
 // Export for convenience
 export { GameState, GameLoop, SaveSystem }
-export { saveSystem }
+export { saveSystem, definitionsManager }
 
 // Start the game loop automatically (can be controlled via UI)
 gameLoop.start()
@@ -24,13 +25,6 @@ gameLoop.on('save', () => {
 gameLoop.on('load', () => {
   saveSystem.loadFromLocalStorage()
 })
-
-// Debug: log tick events in development
-if (import.meta.env.DEV) {
-  gameLoop.on('tick', (delta) => {
-    console.debug(`Tick: ${delta.toFixed(3)}s`)
-  })
-}
 
 // Log game events
 gameLoop.on('pause', () => {

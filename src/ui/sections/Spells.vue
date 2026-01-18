@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useGame } from '../../core/useGame'
+import { definitionsManager } from '../../core'
 import type { Element } from '../../systems/talent'
 import type { Spell } from '../../systems/spell'
 import { LearningActivityFactory } from '../../systems/learningActivity'
@@ -14,9 +15,13 @@ const selectedElement = ref<Element | 'all'>('all')
 // Load spell definitions
 onMounted(async () => {
   try {
-    const response = await fetch('/data/spells.json')
-    const data = await response.json()
-    spellDefinitions.value = data.spells || []
+    // Ensure definitions are loaded
+    if (!definitionsManager.isLoaded()) {
+      await definitionsManager.loadAllDefinitions()
+    }
+    
+    const spellDefs = definitionsManager.getSpellDefinitions()
+    spellDefinitions.value = spellDefs
     
     // Register spell definitions to spell manager
     if (game.player.value.spellManager) {

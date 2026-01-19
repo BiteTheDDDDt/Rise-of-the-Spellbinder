@@ -3,6 +3,22 @@
     "title": "Rise of the Spellbinder",
     "description": "A mage-themed idle game"
   },
+  "activity": {
+    "work": "Work",
+    "workDesc": "Do temporary work to earn gold",
+    "beg": "Beg",
+    "begDesc": "Beg passersby for a small amount of gold",
+    "meditate_fire": "Meditate (Fire)",
+    "meditate_fireDesc": "Restore Fire mana through meditation",
+    "meditate_water": "Meditate (Water)",
+    "meditate_waterDesc": "Restore Water mana through meditation",
+    "meditate_earth": "Meditate (Earth)",
+    "meditate_earthDesc": "Restore Earth mana through meditation",
+    "meditate_wind": "Meditate (Wind)",
+    "meditate_windDesc": "Restore Wind mana through meditation",
+    "read": "Read",
+    "readDesc": "Read magic books to gain research points"
+  },
   "common": {
     "language": "Language",
     "save": "Save",
@@ -34,6 +50,7 @@
     "buff": "Buff",
     "debuff": "Debuff",
     "cooldown": "Cooldown",
+    "activity": "Activity",
     "castTime": "Cast Time",
     "duration": "Duration",
     "range": "Range",
@@ -49,6 +66,26 @@
     "locked": "Locked",
     "learn": "Learn",
     "practice": "Practice",
+    "practice": "Practice",
+    "training": "Training",
+    "availableActivities": "Available Activities",
+    "start": "Start",
+    "cancelActivity": "Cancel Activity",
+    "cannotStartDetail": "Insufficient resources or cost deduction failed",
+    "noCosts": "No costs",
+    "reward": "Reward",
+    "cost": "Cost",
+    "seconds": "seconds",
+    "inProgress": "In Progress",
+    "queue": "Queue",
+    "noActivity": "No activity in progress",
+    "noLogs": "No logs",
+    "gameLog": "Game Log",
+    "refresh": "Refresh",
+    "clearLog": "Clear Log",
+    "autoScroll": "Auto Scroll",
+    "logCount": "log entries",
+    "logHint": "Newest logs shown at top",
     "cast": "Cast",
     "use": "Use",
     "equip": "Equip",
@@ -93,6 +130,7 @@
     "settings": "Settings"
   },
   "element": {
+    "element": "Element",
     "fire": "Fire",
     "water": "Water",
     "earth": "Earth",
@@ -183,15 +221,6 @@
     "thunder_bird": "Thunder Bird",
     "air_sprite": "Air Sprite"
   },
-  "activity": {
-    "work": "Work",
-    "beg": "Beg",
-    "meditate_fire": "Meditate (Fire)",
-    "meditate_water": "Meditate (Water)",
-    "meditate_earth": "Meditate (Earth)",
-    "meditate_wind": "Meditate (Wind)",
-    "read": "Read"
-  },
   "locale": {
     "town_outskirts": "Town Outskirts",
     "abandoned_mine": "Abandoned Mine",
@@ -264,7 +293,7 @@
     "exportSuccess": "Save exported successfully!",
     "importSuccess": "Save imported successfully!",
     "importFailed": "Failed to import save",
-    "resetConfirm": "Are you sure you want to reset the game? This will delete all progress and start over. This action cannot be undone.",
+    "resetConfirm": "Are you sure you want to reset game? This will delete all progress and start over. This action cannot be undone.",
     "resetSuccess": "Game has been reset",
     "notEnoughGold": "Not enough gold!",
     "notEnoughStock": "Not enough stock!",
@@ -317,6 +346,8 @@
     "characterStats": "Character Stats",
     "unnamed": "Unnamed",
     "recentCombat": "Recent Combat",
-    "timeAgo": "ago"
+    "timeAgo": "ago",
+    "repeat": "Repeat",
+    "cancelRepeat": "Cancel Repeat"
   }
-}
+ }

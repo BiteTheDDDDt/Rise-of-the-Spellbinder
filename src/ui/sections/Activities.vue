@@ -28,23 +28,30 @@ onMounted(async () => {
 function startActivity(activity: ActivityData) {
   const success = game.activityRunner.value.startActivity(activity)
   if (!success) {
-    alert(`无法开始活动: ${activity.name}\n资源不足或成本扣除失败`)
+    alert(`${t('common.cannotStart')} ${getActivityName(activity)}\n${t('common.cannotStartDetail')}`)
   }
 }
 
-function cancelActivity() {
-  game.activityRunner.value.cancelCurrentActivity()
+function getActivityName(activity: ActivityData): string {
+  if ('name_key' in activity) {
+    return t(activity.name_key)
+  }
+  // 回退到使用活动ID作为翻译键
+  return t(`activity.${activity.id}`) || activity.name || ''
 }
 
-const currentActivity = computed(() => game.activityRunner.value.getCurrentActivity())
-const progressPercent = computed(() => currentActivity.value ? currentActivity.value.progress * 100 : 0)
-const remainingTime = computed(() => game.activityRunner.value.getRemainingTime())
-const queue = computed(() => game.activityRunner.value.getQueue())
+function getActivityDescription(activity: ActivityData): string {
+  if ('description_key' in activity) {
+    return t(activity.description_key)
+  }
+  // 回退到使用活动ID作为翻译键
+  return t(`activity.${activity.id}Desc`) || activity.description || ''
+}
 
 function getActivityTooltip(activity: ActivityData): string {
   const rewards = activity.rewards.map(r => `+${r.amount} ${r.resource}`).join(', ')
-  const costs = activity.costs ? activity.costs.map(c => `-${c.amount} ${c.resource}`).join(', ') : '无消耗'
-  return `${activity.description}\n\n奖励: ${rewards}\n消耗: ${costs}`
+  const costs = activity.costs ? activity.costs.map(c => `-${c.amount} ${c.resource}`).join(', ') : t('common.noCosts')
+  return `${getActivityDescription(activity)}\n\n${t('common.reward')}: ${rewards}\n${t('common.cost')}: ${costs}`
 }
 
 const isActivityRepeating = (activityId: string) => game.activityRunner.value.repeatingActivities.has(activityId)
@@ -56,43 +63,17 @@ const toggleActivityRepeat = (activityId: string) => {
 <template>
   <div class="activities-section">
     <h2 class="section-title">📋 活动</h2>
-    
-    <!-- Current Activity -->
-    <div v-if="currentActivity" class="current-activity">
-      <h3>当前活动: {{ currentActivity.activity.name }}</h3>
-      <div class="progress-container">
-        <div class="progress-bar" :style="{ width: `${progressPercent}%` }"></div>
-        <span class="progress-text">{{ progressPercent.toFixed(1) }}%</span>
-      </div>
-      <p class="activity-desc">{{ currentActivity.activity.description }}</p>
-      <p class="remaining-time">剩余时间: {{ remainingTime.toFixed(1) }} 秒</p>
-      <button @click="cancelActivity" class="btn cancel-btn">取消活动</button>
-    </div>
-    <div v-else class="no-activity">
-      <p>没有进行中的活动</p>
-    </div>
-
-    <!-- Activity Queue -->
-    <div v-if="queue.length > 0" class="activity-queue">
-      <h4>队列 ({{ queue.length }})</h4>
-      <ul class="queue-list">
-        <li v-for="item in queue" :key="item.id" class="queue-item">
-          <span>{{ item.activity.name }}</span>
-          <small>{{ item.activity.duration }} 秒</small>
-        </li>
-      </ul>
-    </div>
 
     <!-- Available Activities -->
     <div class="available-activities">
-      <h3>可用活动</h3>
+      <h3>{{ t('common.availableActivities') }}</h3>
       <div class="activity-grid">
         <Tooltip v-for="activity in activities" :key="activity.id" :content="getActivityTooltip(activity)" position="top" :delay="200">
           <div class="activity-card">
-            <h4 class="activity-name">{{ activity.name }}</h4>
-            <p class="activity-desc">{{ activity.description }}</p>
+            <h4 class="activity-name">{{ getActivityName(activity) }}</h4>
+            <p class="activity-desc">{{ getActivityDescription(activity) }}</p>
             <div class="activity-meta">
-              <span class="duration">⏱️ {{ activity.duration }} 秒</span>
+              <span class="duration">⏱️ {{ activity.duration }} {{ t('common.seconds') }}</span>
               <div class="rewards">
                 <span v-for="reward in activity.rewards" :key="reward.resource" class="reward-tag">
                   +{{ reward.amount }} {{ reward.resource }}
@@ -102,7 +83,7 @@ const toggleActivityRepeat = (activityId: string) => {
             <button @click="toggleActivityRepeat(activity.id)" :class="['btn repeat-btn', { active: isActivityRepeating(activity.id) }]">
               {{ isActivityRepeating(activity.id) ? t('ui.cancelRepeat') : t('ui.repeat') }}
             </button>
-            <button @click="startActivity(activity)" class="btn start-btn">开始</button>
+            <button @click="startActivity(activity)" class="btn start-btn">{{ t('common.start') }}</button>
           </div>
         </Tooltip>
       </div>
@@ -115,7 +96,7 @@ const toggleActivityRepeat = (activityId: string) => {
   padding: 20px;
   background: #1e1e1e;
   border-radius: 12px;
-  border: 1px solid #333;
+  border:1px solid #333;
 }
 
 .section-title {
@@ -125,110 +106,52 @@ const toggleActivityRepeat = (activityId: string) => {
   padding-bottom: 10px;
 }
 
-.current-activity {
-  background: #252525;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.progress-container {
-  background: #333;
-  height: 24px;
-  border-radius: 12px;
-  margin: 10px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-bar {
-  background: linear-gradient(90deg, #3700b3, #bb86fc);
-  height: 100%;
-  border-radius: 12px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  text-shadow: 0 0 3px black;
-}
-
-.activity-desc {
-  color: #aaa;
-  font-size: 0.9rem;
-  margin: 8px 0;
-}
-
-.remaining-time {
-  color: #ff9800;
-  font-weight: bold;
-}
-
-.no-activity {
-  background: #252525;
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  color: #888;
-  margin-bottom: 20px;
-}
-
-.activity-queue {
-  background: #252525;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.queue-list {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0 0 0;
-}
-
-.queue-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #1e1e1e;
-  margin-bottom: 5px;
-  border-radius: 6px;
-  border-left: 4px solid #3700b3;
-}
-
 .available-activities {
   margin-top: 20px;
 }
 
+.available-activities h3 {
+  color: #e0e0e0;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
 .activity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 15px;
   margin-top: 15px;
 }
 
 .activity-card {
   background: #252525;
-  padding: 15px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 10px;
   border: 1px solid #333;
   transition: transform 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .activity-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: #bb86fc;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
 .activity-name {
-  margin-top: 0;
+  margin: 0 0 10px 0;
   color: #e0e0e0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.activity-desc {
+  color: #aaa;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  flex: 1;
 }
 
 .activity-meta {
@@ -241,50 +164,58 @@ const toggleActivityRepeat = (activityId: string) => {
 
 .duration {
   color: #ff9800;
+  font-weight: bold;
 }
 
 .rewards {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .reward-tag {
   background: #3700b3;
   color: white;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .btn {
   background: #3700b3;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .btn:hover {
   background: #6200ee;
+  transform: translateY(-1px);
 }
 
-.cancel-btn {
-  background: #b00020;
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.cancel-btn:hover {
-  background: #d32f2f;
+.btn:disabled:hover {
+  transform: none;
+  background: #3700b3;
 }
 
 .repeat-btn {
-  background: #555;
+  background: #444;
+  margin-right: 8px;
 }
+
 .repeat-btn.active {
   background: #ff9800;
   color: white;

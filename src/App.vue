@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useGame } from './core/useGame'
-import { saveSystem, definitionsManager } from './core'
+import { saveSystem, definitionsManager, gameState } from './core'
 
 import { ref, watch, watchEffect, onMounted } from 'vue'
 import ResourceBar from './ui/components/ResourceBar.vue'
@@ -13,7 +13,7 @@ import StartScreen from './ui/sections/StartScreen.vue'
 import NewGame from './ui/sections/NewGame.vue'
 import Character from './ui/sections/Character.vue'
 import Settings from './ui/sections/Settings.vue'
-import GameLog from './ui/components/GameLog.vue'
+import RightPanel from './ui/components/RightPanel.vue'
 import Explore from './ui/sections/Explore.vue'
 import Combat from './ui/sections/Combat.vue'
 import Inventory from './ui/sections/Inventory.vue'
@@ -26,7 +26,7 @@ const { t, locale } = useI18n()
 const game = useGame()
 
 const languages = [
-  { code: 'en-US', label: t('common.language') },
+  { code: 'en-US', label: 'English' },
   { code: 'zh-CN', label: '中文' }
 ]
 
@@ -67,7 +67,7 @@ watch(menuItems, (newItems, oldItems = []) => {
       { id: 'shop', icon: '🏪', label: t('common.shop') },
       { id: 'settings', icon: '⚙️', label: t('common.settings') }
     ]
-  
+
   // 解锁逻辑
   const unlockedItems = items.filter(item => {
     // 法术页面始终解锁，玩家需要访问它来学习法术
@@ -88,7 +88,7 @@ watch(menuItems, (newItems, oldItems = []) => {
     // 默认解锁其他菜单
     return true
   })
-  
+
   menuItems.value = unlockedItems
 }
 
@@ -108,11 +108,28 @@ onMounted(async () => {
       return
     }
     
+    // 将怪物数据加载到 GameState
+    const monsters = definitionsManager.getMonsterDefinitions()
+    gameState.ensureMonsterData(monsters)
+    console.log(`[App] Loaded ${monsters.length} monster definitions:`, monsters.map(m => m.id))
+    
     // 定义加载完成后，尝试加载存档
     if (saveSystem.hasSave()) {
       try {
         const loadSuccess = saveSystem.loadFromLocalStorage()
-        if (!loadSuccess) {
+        if (loadSuccess) {
+          // 确保怪物数据被正确加载（旧存档可能没有怪物数据）
+          gameState.ensureMonsterData(monsters)
+          console.log('[App] Ensured monster data after save load')
+          console.log('[App] Current monsters in state:', {
+            count: gameState.data.monsters?.length || 0,
+            monsters: gameState.data.monsters?.map(m => m.id) || []
+          })
+          // 如果成功加载存档，更新视图到主游戏界面
+          if (game.state.hasStarted) {
+            currentView.value = 'main'
+          }
+        } else {
           console.warn('Failed to load save, starting fresh game')
           // 清除可能损坏的存档
           localStorage.removeItem('rise_of_the_spellbinder_save')
@@ -126,6 +143,9 @@ onMounted(async () => {
     // 重新启用自动加载
     saveSystem.enableAutoLoad()
     
+    // 设置自动保存（确保在定义加载完成后才启用）
+    saveSystem.setupAutoSave()
+    
     // 设置加载完成
     isLoading.value = false
   } catch (error) {
@@ -137,15 +157,27 @@ onMounted(async () => {
 })
 
 function handleSave() {
-  saveSystem.saveToLocalStorage()
-  alert('Game saved!')
+  const success = saveSystem.saveToLocalStorage()
+  if (success) {
+    alert('Game saved!')
+  } else {
+    alert('Failed to save game!')
+  }
 }
 
 function handleLoad() {
-  if (saveSystem.loadFromLocalStorage()) {
-    alert('Game loaded!')
-  } else {
+  if (!saveSystem.hasSave()) {
     alert('No save found')
+    return
+  }
+  const success = saveSystem.loadFromLocalStorage()
+  if (success) {
+    alert('Game loaded!')
+    if (game.state.hasStarted) {
+      currentView.value = 'main'
+    }
+  } else {
+    alert('Failed to load save')
   }
 }
 
@@ -195,10 +227,16 @@ function openGitHubRepo() {
   window.open('https://github.com/BiteTheDDDDt/Rise-of-the-Spellbinder', '_blank')
 }
 
-// 监视游戏状态，如果hasStarted变为false，则显示开始界面
+// 监视游戏状态，根据hasStarted更新视图
 watch(() => game.state.hasStarted, (hasStarted) => {
-  if (!hasStarted && currentView.value !== 'start') {
-    currentView.value = 'start'
+  if (hasStarted) {
+    if (currentView.value !== 'main') {
+      currentView.value = 'main'
+    }
+  } else {
+    if (currentView.value !== 'start') {
+      currentView.value = 'start'
+    }
   }
 })
 </script>
@@ -333,9 +371,9 @@ watch(() => game.state.hasStarted, (hasStarted) => {
           </div>
         </main>
 
-        <!-- Game Log Sidebar -->
-        <aside class="log-sidebar">
-          <GameLog />
+        <!-- Right Sidebar (Progress + Log) -->
+        <aside class="right-sidebar">
+          <RightPanel />
         </aside>
       </div>
 
@@ -553,14 +591,13 @@ watch(() => game.state.hasStarted, (hasStarted) => {
   padding: 20px 0;
 }
 
-.log-sidebar {
+.right-sidebar {
   width: 300px;
   background: #1e1e1e;
   border-left: 1px solid #333;
-  padding: 20px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .menu {

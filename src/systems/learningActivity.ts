@@ -19,8 +19,8 @@ export class LearningActivityFactory {
 
     return {
       id: `learn_${spell.id}`,
-      name: `学习${spell.name}`,
-      description: `学习${spell.name}法术：${spell.description}`,
+      name: `${spell.name} (学习)`,
+      description: `${spell.description}`,
       duration,
       cost: [
         { resource: 'research', amount: spell.level * 10 },
@@ -51,10 +51,10 @@ export class LearningActivityFactory {
     }
     cost.push({ resource: 'gold', amount: skill.currentLevel })
 
-    const activity = {
+    return {
       id: `practice_${skill.id}`,
-      name: `练习${skill.name}`,
-      description: `通过练习提高${skill.name}技能：${skill.description}`,
+      name: `${skill.name} (练习)`,
+      description: `${skill.description}`,
       duration,
       cost,
       rewards: [
@@ -68,8 +68,6 @@ export class LearningActivityFactory {
         element: element as Element | undefined
       }
     }
-    
-    return activity as LearningActivityData
   }
 
   static createSkillTrainingActivity(skillId: string, skillName: string, element: Element | 'neutral', talentLevel: number): LearningActivityData {
@@ -88,8 +86,8 @@ export class LearningActivityFactory {
 
     return {
       id: `train_${skillId}`,
-      name: `训练${skillName}`,
-      description: `通过系统训练提高${skillName}技能`,
+      name: `${skillName} (训练)`,
+      description: `系统训练提高${skillName}技能`,
       duration,
       cost,
       rewards: [
@@ -100,7 +98,7 @@ export class LearningActivityFactory {
       type: 'training',
       metadata: {
         skillId,
-        element: element !== 'neutral' ? element as Element : undefined
+        element: element !== 'neutral' ? element : undefined
       }
     }
   }

@@ -1,8 +1,8 @@
 [
   {
     "id": "work",
-    "name": "打工",
-    "description": "做一些临时工作赚取金币",
+    "name_key": "activity.work",
+    "description_key": "activity.workDesc",
     "duration": 5,
     "rewards": [
       {
@@ -14,8 +14,8 @@
   },
   {
     "id": "beg",
-    "name": "乞讨",
-    "description": "向路人乞讨少量金币",
+    "name_key": "activity.beg",
+    "description_key": "activity.begDesc",
     "duration": 2,
     "rewards": [
       {
@@ -28,8 +28,8 @@
   },
   {
     "id": "meditate_fire",
-    "name": "冥想(火)",
-    "description": "通过冥想来恢复火之魔力",
+    "name_key": "activity.meditateFire",
+    "description_key": "activity.meditateFireDesc",
     "duration": 10,
     "rewards": [
       {
@@ -41,8 +41,8 @@
   },
   {
     "id": "meditate_water",
-    "name": "冥想(水)",
-    "description": "通过冥想来恢复水之魔力",
+    "name_key": "activity.meditateWater",
+    "description_key": "activity.meditateWaterDesc",
     "duration": 10,
     "rewards": [
       {
@@ -54,8 +54,8 @@
   },
   {
     "id": "meditate_earth",
-    "name": "冥想(土)",
-    "description": "通过冥想来恢复土之魔力",
+    "name_key": "activity.meditateEarth",
+    "description_key": "activity.meditateEarthDesc",
     "duration": 10,
     "rewards": [
       {
@@ -67,8 +67,8 @@
   },
   {
     "id": "meditate_wind",
-    "name": "冥想(风)",
-    "description": "通过冥想来恢复风之魔力",
+    "name_key": "activity.meditateWind",
+    "description_key": "activity.meditateWindDesc",
     "duration": 10,
     "rewards": [
       {
@@ -80,8 +80,8 @@
   },
   {
     "id": "read",
-    "name": "阅读",
-    "description": "阅读魔法书籍获取研究点",
+    "name_key": "activity.read",
+    "description_key": "activity.readDesc",
     "duration": 15,
     "rewards": [
       {

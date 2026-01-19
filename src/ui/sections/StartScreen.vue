@@ -1,25 +1,50 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { saveSystem } from '../../core'
+import { computed, watch } from 'vue'
+import { saveSystem, gameState } from '../../core'
 
 const emit = defineEmits<{
   startNewGame: []
   continueGame: []
 }>()
 
-const hasSave = computed(() => saveSystem.hasSave())
+const hasSave = computed(() => {
+  const result = saveSystem.hasSave()
+  console.log('[StartScreen] hasSave check:', result)
+  return result
+})
 
 function handleNewGame() {
   emit('startNewGame')
 }
 
 function handleContinue() {
-  if (hasSave.value) {
+  console.log('[StartScreen] handleContinue called', { hasSave: hasSave.value, hasStarted: gameState.data.hasStarted })
+  if (!hasSave.value) {
+    console.warn('[StartScreen] No save found!')
+    return
+  }
+  
+  // 检查游戏是否已经开始（在App.vue中已加载存档）
+  // 如果还没有，尝试加载
+  if (!gameState.data.hasStarted) {
+    console.log('[StartScreen] Loading save...')
     if (saveSystem.loadFromLocalStorage()) {
       emit('continueGame')
+    } else {
+      console.error('[StartScreen] Failed to load save')
+      alert('读取存档失败')
     }
+  } else {
+    // 已经加载过了，直接继续
+    console.log('[StartScreen] Game already started, continuing...')
+    emit('continueGame')
   }
 }
+
+// 监听 hasSave 变化，用于调试
+watch(hasSave, (newVal) => {
+  console.log('[StartScreen] hasSave changed:', newVal)
+}, { immediate: true })
 
 function handleImport(event: Event) {
   const input = event.target as HTMLInputElement

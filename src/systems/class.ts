@@ -152,11 +152,13 @@ export class ClassTree {
   nodes: Map<ClassId, ClassNode>
   edges: Map<ClassId, ClassId[]>
   achievements: ClassId[]
+  private addPrereqCount: number
 
   constructor() {
     this.nodes = new Map()
     this.edges = new Map()
     this.achievements = []  // 移除 reactive，使用普通数组
+    this.addPrereqCount = 0
     console.log('[ClassTree] Constructor called, nodes initialized')
   }
 
@@ -174,14 +176,10 @@ export class ClassTree {
   }
 
   addPrerequisite(classId: ClassId, prerequisiteId: ClassId) {
-    // 添加计数器来检测无限循环
-    if (typeof (window as any).__addPrereqCount === 'undefined') {
-      (window as any).__addPrereqCount = 0
-    }
-    const count = ++((window as any).__addPrereqCount)
+    this.addPrereqCount++
 
-    if (count > 500) {
-      console.error('[ClassTree] Too many addPrerequisite calls! Breaking to prevent crash. Count:', count)
+    if (this.addPrereqCount > 500) {
+      console.error('[ClassTree] Too many addPrerequisite calls! Breaking to prevent crash. Count:', this.addPrereqCount)
       throw new Error('Infinite loop detected in addPrerequisite')
     }
 

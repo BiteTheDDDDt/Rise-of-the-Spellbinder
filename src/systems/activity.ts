@@ -18,7 +18,9 @@ export interface ActivityCost {
 export interface ActivityData {
   id: string
   name: string
+  name_key?: string
   description: string
+  description_key?: string
   duration: number
   rewards: ActivityReward[]
   costs?: ActivityCost[]
@@ -202,12 +204,26 @@ export class ActivityRunner {
 
   cancelCurrentActivity() {
     if (this.currentActivity) {
+      // 同时也从重复集中移除当前活动的ID
+      const activityId = this.currentActivity.activity.id
+      if (this.repeatingActivities.has(activityId)) {
+        this.repeatingActivities.delete(activityId)
+        console.log(`[ActivityRunner] Cancelled activity ${activityId}, removed from repeating set`)
+      }
       this.currentActivity = null
     }
   }
 
   clearQueue() {
     this.queue = []
+  }
+
+  cancelFromQueue(index: number) {
+    if (index >= 0 && index < this.queue.length) {
+      const item = this.queue[index]
+      logSystem.info(`从队列中取消活动: ${item.activity.name}`, { index, activityId: item.activity.id })
+      this.queue.splice(index, 1)
+    }
   }
 
   addCompleteCallback(callback: ActivityCompleteCallback) {

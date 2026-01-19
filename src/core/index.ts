@@ -10,15 +10,15 @@ export const gameState = new GameState()
 // Create game loop instance
 export const gameLoop = new GameLoop(gameState)
 
-// Setup auto-save after gameState is fully initialized
-saveSystem.setupAutoSave()
-
 // Export for convenience
 export { GameState, GameLoop, SaveSystem }
 export { saveSystem, definitionsManager }
 
 // Start the game loop automatically (can be controlled via UI)
 gameLoop.start()
+
+// Note: Auto-save is set up in App.vue after definitions are loaded
+// This prevents saving incomplete/corrupted game state
 
 // Connect save/load events
 gameLoop.on('save', () => {

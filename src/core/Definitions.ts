@@ -1,4 +1,5 @@
 import { itemManager, type ItemDefinition } from '../systems/item'
+import type { MonsterData } from '../entities/monster'
 
 
 export interface SkillDefinition {
@@ -57,6 +58,7 @@ class DefinitionsManager {
   private achievementDefinitions: AchievementDefinition[] = []
   private shopDefinitions: ShopDefinition[] = []
   private itemDefinitions: ItemDefinition[] = []
+  private monsterDefinitions: MonsterData[] = []
   
   private loaded = false
 
@@ -64,7 +66,7 @@ class DefinitionsManager {
     if (this.loaded) return true
     
     try {
-      // Get the base path for GitHub Pages deployment
+      // Get base path for GitHub Pages deployment
       const basePath = import.meta.env.BASE_URL || '/'
       console.log('[Definitions] Loading from base path:', basePath)
 
@@ -94,6 +96,11 @@ class DefinitionsManager {
       const shopData = await shopResponse.json()
       this.shopDefinitions = shopData.shops || []
 
+      // Load monster definitions
+      const monsterResponse = await fetch(`${basePath}data/monsters.json`)
+      const monsterData = await monsterResponse.json()
+      this.monsterDefinitions = monsterData || []
+
       this.loaded = true
       return true
     } catch (error) {
@@ -120,6 +127,10 @@ class DefinitionsManager {
 
   getItemDefinitions(): ItemDefinition[] {
     return this.itemDefinitions
+  }
+
+  getMonsterDefinitions(): MonsterData[] {
+    return this.monsterDefinitions
   }
 
   isLoaded(): boolean {

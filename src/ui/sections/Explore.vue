@@ -97,6 +97,13 @@ async function startExplore(localeId: string) {
   }
   
   try {
+    // 检查怪物数据是否已加载
+    const { definitionsManager } = await import('../../core')
+    if (!definitionsManager.isLoaded()) {
+      exploreError.value = '游戏数据仍在加载中，请稍后重试'
+      return
+    }
+
     // 创建探索活动
     const { ExploreActivityFactory } = await import('../../systems/exploreActivity')
     const exploreActivity = ExploreActivityFactory.createExploreActivity(

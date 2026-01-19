@@ -515,53 +515,79 @@ export class Player {
   }
 
   static fromJSON(data: any, skillDefinitions?: any[], spellDefinitions?: any[], achievementDefinitions?: any[], itemManager?: any): Player {
-    const player = new Player(data.name)
-    player.data.level = data.level || 1
-    player.data.experience = data.experience || 0
-    player.data.talent = Talent.fromJSON(data.talent || {})
-    player.data.resourceManager = ResourceManager.fromJSON(data.resources || {})
+    console.log('[Player] fromJSON called', { name: data.name, hasData: !!data })
+    
+    try {
+      const player = new Player(data.name)
+      console.log('[Player] Player created, starting to load data...')
+      
+      player.data.level = data.level || 1
+      player.data.experience = data.experience || 0
+      
+      console.log('[Player] Loading talent...')
+      player.data.talent = Talent.fromJSON(data.talent || {})
+      
+      console.log('[Player] Loading resourceManager...')
+      player.data.resourceManager = ResourceManager.fromJSON(data.resources || {})
 
-    if (data.achievements && achievementDefinitions) {
-      player.data.achievementManager = AchievementManager.fromJSON(data.achievements, achievementDefinitions)
-    }
-
-    if (data.skills && skillDefinitions) {
-      player.data.skillManager = SkillManager.fromJSON(data.skills, skillDefinitions)
-      // Update skill manager's achievement manager reference
-      player.data.skillManager.achievementManager = player.data.achievementManager
-    }
-
-    if (data.spells && spellDefinitions) {
-      player.data.spellManager = SpellManager.fromJSON(data.spells, spellDefinitions)
-      // Update spell manager's achievement manager reference
-      player.data.spellManager.achievementManager = player.data.achievementManager
-    }
-
-    // Load inventory if data exists
-    if (data.inventory && itemManager) {
-      player.data.inventory = Inventory.fromJSON(data.inventory, itemManager)
-    }
-
-    player.applyTalentBonuses()
-
-    if (data.classes) {
-      if (player.data.simpleClassManager) {
-        const loadedManager = player.data.simpleClassManager.constructor()
-        if (loadedManager.fromJSON) {
-          player.data.simpleClassManager = loadedManager.fromJSON(data.classes)
-        }
+      if (data.achievements && achievementDefinitions) {
+        console.log('[Player] Loading achievementManager...')
+        player.data.achievementManager = AchievementManager.fromJSON(data.achievements, achievementDefinitions)
       }
-    }
 
-    if (data.classManager) {
-      const classManager = ClassManager.fromJSON(data.classManager)
-      const classTree = createDefaultClassTree()
-      classManager.setClassTree(classTree)
-      // 恢复响应式的职业解锁列表
-      player.unlockedClassesRef.value = [...(data.classManager?.unlockedClasses || ['apprentice'])]
-      player.data.classManager = classManager
-    }
+      if (data.skills && skillDefinitions) {
+        console.log('[Player] Loading skillManager...')
+        player.data.skillManager = SkillManager.fromJSON(data.skills, skillDefinitions)
+        // Update skill manager's achievement manager reference
+        player.data.skillManager.achievementManager = player.data.achievementManager
+      }
 
-    return player
+      if (data.spells && spellDefinitions) {
+        console.log('[Player] Loading spellManager...')
+        player.data.spellManager = SpellManager.fromJSON(data.spells, spellDefinitions)
+        // Update spell manager's achievement manager reference
+        player.data.spellManager.achievementManager = player.data.achievementManager
+      }
+
+      // Load inventory if data exists
+      if (data.inventory && itemManager) {
+        console.log('[Player] Loading inventory...')
+        player.data.inventory = Inventory.fromJSON(data.inventory, itemManager)
+      }
+
+      console.log('[Player] Applying talent bonuses...')
+      player.applyTalentBonuses()
+
+      if (data.classes) {
+        console.log('[Player] Loading simpleClassManager...')
+        // 直接使用 fromJSON 静态方法
+        player.data.simpleClassManager = SimpleClassManager.fromJSON(data.classes)
+        // 确保重新初始化类数据（fromJSON 不会自动调用 init）
+        player.data.simpleClassManager.init()
+      }
+
+      if (data.classManager) {
+        console.log('[Player] Loading classManager...', data.classManager)
+        const classManager = ClassManager.fromJSON(data.classManager)
+        const classTree = createDefaultClassTree()
+        classManager.setClassTree(classTree)
+        // 恢复 classTree 的 achievements 状态
+        if (data.classManager?.classTree?.achievements && Array.isArray(data.classManager.classTree.achievements)) {
+          classTree.achievements = [...data.classManager.classTree.achievements]
+        }
+        // 确保两个状态同步
+        classTree.achievements = [...(data.classManager?.unlockedClasses || data.classManager?.classTree?.achievements || ['apprentice'])]
+        // 恢复响应式的职业解锁列表
+        player.unlockedClassesRef.value = [...classTree.achievements]
+        player.data.classManager = classManager
+        console.log('[Player] Restored classManager with unlocked classes:', player.unlockedClassesRef.value)
+      }
+
+      console.log('[Player] Player loaded successfully')
+      return player
+    } catch (error) {
+      console.error('[Player] Error in fromJSON:', error)
+      throw error
+    }
   }
 }

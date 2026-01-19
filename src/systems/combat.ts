@@ -385,6 +385,31 @@ export class CombatSystem {
     this.executePlayerTurn()
   }
 
+  autoExecute(maxRounds: number = 100): 'player_won' | 'enemy_won' | 'draw' {
+    let round = 0
+    while (this.isActive && round < maxRounds) {
+      round++
+      
+      if (this.currentTurn === 'player') {
+        this.executePlayerTurn()
+      } else {
+        this.executeMonsterTurn()
+      }
+      
+      if (!this.isActive) {
+        break
+      }
+    }
+    
+    if (this.result === 'victory') {
+      return 'player_won'
+    } else if (this.result === 'defeat') {
+      return 'enemy_won'
+    } else {
+      return 'draw'
+    }
+  }
+
   getCombatState() {
     return {
       playerHealth: this.getPlayerHealth(),

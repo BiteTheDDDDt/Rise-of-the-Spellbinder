@@ -12,6 +12,8 @@ export interface SaveData {
   lastUpdate: number
   player: any
   activityRunner: any
+  hasStarted: boolean
+  monsters?: any[] // 可选的怪物数据，如果没有则使用定义中的数据
   meta: {
     savedAt: number
     playTime: number
@@ -31,6 +33,13 @@ export class SaveSystem {
 
   constructor() {
     // 不在构造函数中设置自动保存，延迟到游戏完全初始化后
+    console.log('[SaveSystem] Initialized with key:', SAVE_KEY)
+    this.debugLocalStorage()
+  }
+
+  private debugLocalStorage() {
+    console.log('[SaveSystem] All localStorage keys:', Object.keys(localStorage))
+    console.log('[SaveSystem] Save exists:', localStorage.getItem(SAVE_KEY) !== null)
   }
 
   public setupAutoSave() {
@@ -56,6 +65,8 @@ export class SaveSystem {
       lastUpdate: state.lastUpdate,
       player: state.player.toJSON(),
       activityRunner: state.activityRunner.toJSON(),
+      hasStarted: state.hasStarted,
+      monsters: state.monsters,
       meta: {
         savedAt: Date.now(),
         playTime: state.gameTime
@@ -65,45 +76,128 @@ export class SaveSystem {
 
   loadSaveData(data: SaveData): boolean {
     try {
+      console.log('[SaveSystem] Loading save data...', { 
+        version: data.version, 
+        hasStarted: data.hasStarted,
+        gameTime: data.gameTime,
+        hasPlayer: !!data.player,
+        hasActivityRunner: !!data.activityRunner,
+        hasMonsters: !!data.monsters,
+        monstersCount: data.monsters?.length || 0
+      })
+      
       if (data.version !== VERSION) {
-        logSystem.warning(`存档版本不匹配: ${data.version} != ${VERSION}`)
+        logSystem.warning(`存档版本版本不匹配: ${data.version} != ${VERSION}`)
         console.warn(`Save version mismatch: ${data.version} != ${VERSION}`)
         // TODO: implement migration logic
+      }
+
+      // 检查定义是否已加载
+      const skillDefs = definitionsManager.getSkillDefinitions()
+      const spellDefs = definitionsManager.getSpellDefinitions()
+      const achievementDefs = definitionsManager.getAchievementDefinitions()
+      const monsterDefs = definitionsManager.getMonsterDefinitions()
+      
+      console.log('[SaveSystem] Definitions check:', {
+        skillDefs: skillDefs?.length,
+        spellDefs: spellDefs?.length,
+        achievementDefs: achievementDefs?.length,
+        monsterDefs: monsterDefs?.length
+      })
+      
+      if (!skillDefs || !spellDefs || !achievementDefs) {
+        console.error('[SaveSystem] Definitions not loaded yet!')
+        throw new Error('Game definitions not loaded. Cannot load save.')
       }
 
       const state = gameState.data
       state.gameTime = data.gameTime
       state.isPaused = data.isPaused
       state.lastUpdate = Date.now() // Reset lastUpdate to now
+      state.hasStarted = data.hasStarted ?? true // 向后兼容，默认为 true
 
       if (data.player) {
-        // Get definitions for player loading
-        const skillDefinitions = definitionsManager.getSkillDefinitions()
-        const spellDefinitions = definitionsManager.getSpellDefinitions()
-        const achievementDefinitions = definitionsManager.getAchievementDefinitions()
+        console.log('[SaveSystem] Loading player data...', data.player)
         
-        state.player = Player.fromJSON(
-          data.player,
-          skillDefinitions,
-          spellDefinitions,
-          achievementDefinitions,
-          itemManager
-        )
+        try {
+          const newPlayer = Player.fromJSON(
+            data.player,
+            skillDefs,
+            spellDefs,
+            achievementDefs,
+            itemManager
+          )
+          console.log('[SaveSystem] Player loaded successfully')
+          state.player = newPlayer
+        } catch (playerError) {
+          console.error('[SaveSystem] Error creating player from JSON:', playerError)
+          throw playerError
+        }
       }
+      
       if (data.activityRunner) {
-        state.activityRunner = ActivityRunner.fromJSON(data.activityRunner)
-        // 重新设置 achievementManager 和 resourceManager 引用
-        state.activityRunner.achievementManager = state.player.achievementManager
-        state.activityRunner.resourceManager = state.player.resourceManager
+        console.log('[SaveSystem] Loading activityRunner data...', data.activityRunner)
+        try {
+          const newActivityRunner = ActivityRunner.fromJSON(data.activityRunner)
+          // 重新设置 achievementManager 和 resourceManager 引用
+          newActivityRunner.achievementManager = state.player.achievementManager
+          newActivityRunner.resourceManager = state.player.resourceManager
+          state.activityRunner = newActivityRunner
+          console.log('[SaveSystem] ActivityRunner loaded successfully')
+        } catch (activityError) {
+          console.error('[SaveSystem] Error creating activityRunner from JSON:', activityError)
+          throw activityError
+        }
       }
+      
+      // 加载怪物数据（如果存档中没有则使用定义中的数据）
+      const monstersToLoad = (data.monsters && data.monsters.length > 0) ? data.monsters : monsterDefs || []
+      
+      // 使用 splice 正确替换响应式数组的内容
+      state.monsters.splice(0, state.monsters.length, ...monstersToLoad)
+      
+      console.log('[SaveSystem] Loaded monsters to state:', {
+        source: data.monsters && data.monsters.length > 0 ? 'save' : 'definitions',
+        count: state.monsters.length,
+        ids: state.monsters.map(m => m.id)
+      })
+      
+      if (data.monsters && data.monsters.length > 0) {
+        console.log('[SaveSystem] Loaded monsters from save:', data.monsters.length)
+      } else {
+        console.log('[SaveSystem] Using monster definitions (save had no monsters):', monstersToLoad.length)
+      }
+      
+      // 验证怪物数据是否正确加载
+      if (!state.monsters || state.monsters.length === 0) {
+        console.error('[SaveSystem] Monster data is still empty after loading!')
+        console.error('[SaveSystem] state.monsters:', state.monsters)
+        console.error('[SaveSystem] monstersToLoad:', monstersToLoad)
+        console.error('[SaveSystem] state.monsters.length:', state.monsters.length)
+      } else {
+        console.log('[SaveSystem] Monster data loaded successfully:', {
+          count: state.monsters.length,
+          sample: state.monsters.slice(0, 3).map(m => ({ id: m.id, name: m.name }))
+        })
+      }
+      
       // 重新连接活动回调
+      console.log('[SaveSystem] Reconnecting activity callbacks...')
       gameState.reconnectActivityCallbacks()
 
       logSystem.info('游戏数据加载成功')
       return true
     } catch (error) {
-      logSystem.error('加载游戏数据失败', { error: String(error) })
-      console.error('Failed to load save data:', error)
+      console.error('[SaveSystem] Error loading save data:', error)
+      console.error('[SaveSystem] Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      })
+      logSystem.error('加载游戏数据失败', { 
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined 
+      })
       return false
     }
   }
@@ -111,32 +205,43 @@ export class SaveSystem {
   saveToLocalStorage(): boolean {
     try {
       const data = this.getSaveData()
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+      console.log('[SaveSystem] Saving to localStorage...', { gameTime: data.gameTime, hasStarted: data.hasStarted, key: SAVE_KEY })
+      const jsonStr = JSON.stringify(data)
+      localStorage.setItem(SAVE_KEY, jsonStr)
       this._lastSaveTime = Date.now()
+      // 验证保存是否成功
+      const saved = localStorage.getItem(SAVE_KEY)
+      console.log('[SaveSystem] Save verification:', { saved: !!saved, key: SAVE_KEY })
       logSystem.success('游戏已保存到本地存储', { savedAt: Date.now() })
       if (import.meta.env.DEV) console.debug('Game saved to localStorage')
       return true
     } catch (error) {
-      logSystem.error('保存游戏失败', { error: String(error) })
-      console.error('Failed to save to localStorage:', error)
+      console.error('[SaveSystem] Error saving:', error)
+      logSystem.error('保存游戏失败', { error: String(error), stack: error instanceof Error ? error.stack : undefined })
       return false
     }
   }
 
   loadFromLocalStorage(): boolean {
     try {
+      console.log('[SaveSystem] Loading from localStorage...', { key: SAVE_KEY })
       const json = localStorage.getItem(SAVE_KEY)
-      if (!json) return false
+      console.log('[SaveSystem] Save data in localStorage:', { exists: !!json })
+      if (!json) {
+        console.warn('[SaveSystem] No save data found in localStorage')
+        return false
+      }
 
       const data = JSON.parse(json) as SaveData
+      console.log('[SaveSystem] Parsed save data:', { version: data.version, hasStarted: data.hasStarted })
       const success = this.loadSaveData(data)
       if (success) {
         logSystem.success('游戏已从本地存储加载', { savedAt: data.meta?.savedAt })
       }
       return success
     } catch (error) {
+      console.error('[SaveSystem] Failed to load from localStorage:', error)
       logSystem.error('加载游戏失败', { error: String(error) })
-      console.error('Failed to load from localStorage:', error)
       return false
     }
   }
@@ -163,7 +268,9 @@ export class SaveSystem {
   }
 
   hasSave(): boolean {
-    return localStorage.getItem(SAVE_KEY) !== null
+    const result = localStorage.getItem(SAVE_KEY) !== null
+    console.log('[SaveSystem] hasSave() called:', result)
+    return result
   }
 
   cleanup() {

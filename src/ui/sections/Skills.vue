@@ -77,13 +77,49 @@ const lockedSkills = computed(() => {
 function getSkillEffectDescription(skill: any): string {
   if (!skill.effects || skill.effects.length === 0) return t('ui.none')
   return skill.effects.map((effect: any) => {
+    const typeLabel = t(`common.${effect.type}`, effect.type)
     if (effect.formula) {
-      return `${effect.type}: ${effect.formula}`
+      // 尝试解析公式，显示更友好的描述
+      const friendlyFormula = effect.formula
+        .replace(/level/g, t('common.level'))
+        .replace(/\*/g, '×')
+      return `${typeLabel}: ${friendlyFormula}`
     }
-    return `${effect.type}: +${effect.value}/等级`
+    return `${typeLabel}: +${effect.value}/${t('common.level')}`
   }).join(', ')
 }
 
+function formatUnlockCondition(condition: string): string {
+  if (!condition || condition === 'true') return t('ui.noRequirements')
+  
+  return condition
+    .split('&&')
+    .map(part => {
+      const trimmed = part.trim()
+      // 处理元素简称
+      let formatted = trimmed
+        .replace(/\bfire\b/g, t('element.fire'))
+        .replace(/\bwater\b/g, t('element.water'))
+        .replace(/\bearth\b/g, t('element.earth'))
+        .replace(/\bwind\b/g, t('element.wind'))
+      
+      // 处理技能 ID (匹配单词字符，不以数字开头)
+      // 我们查找所有可能的技能 ID 并尝试翻译
+      const words = formatted.match(/[a-z_][a-z0-9_]*/g) || []
+      words.forEach(word => {
+        // 如果是元素名称已经替换过了，跳过
+        if ([t('element.fire'), t('element.water'), t('element.earth'), t('element.wind')].includes(word)) return
+        
+        const translated = t(`skill.${word}`)
+        if (translated !== `skill.${word}`) {
+          formatted = formatted.replace(new RegExp(`\\b${word}\\b`, 'g'), translated)
+        }
+      })
+
+      return formatted
+    })
+    .join(' ' + t('common.and') + ' ') // 假设 i18n 中有 and，如果没有则用 ' 且 '
+}
 function canUnlockSkill(skill: any): boolean {
   if (!game.player.value.skillManager) return false
   const playerTalent = game.player.value.talent.data
@@ -237,10 +273,7 @@ function unlockSkill(skillId: string) {
           <div class="skill-requirements">
             <strong>{{ t('ui.requirements') }}: </strong>
             <span v-if="skill.unlockCondition" class="req-text">
-              {{ 
-                skill.unlockCondition === 'true' ? t('ui.noRequirements') :
-                skill.unlockCondition.replace('fire', '🔥').replace('water', '💧').replace('earth', '⛰️').replace('wind', '🌪️')
-              }}
+              {{ formatUnlockCondition(skill.unlockCondition) }}
             </span>
             <span v-else class="req-text">{{ t('ui.noRequirements') }}</span>
           </div>

@@ -9,7 +9,7 @@ const localeManager = ref<LocaleManager | null>(null)
 const locales = ref<LocaleInstance[]>([])
 const isLoading = ref(true)
 const exploreError = ref<string | null>(null)
-const recentCombatLogs = ref<any[]>([])
+const recentCombatLogs = computed(() => game.state.combatHistory || [])
 
 // 检查玩家是否学会攻击法术
 const hasAttackSpell = computed(() => {
@@ -166,19 +166,8 @@ function getLocaleStatus(locale: LocaleInstance): { text: string, color: string 
   }
 }
 
-// 加载最近战斗记录（模拟）
-function loadRecentCombatLogs() {
-  // 这里可以从战斗系统或本地存储加载
-  recentCombatLogs.value = [
-    { id: 1, monster: '史莱姆', result: '胜利', time: '刚刚', gold: 5, exp: 10 },
-    { id: 2, monster: '巨鼠', result: '胜利', time: '5分钟前', gold: 3, exp: 8 },
-    { id: 3, monster: '石傀儡', result: '失败', time: '10分钟前', gold: 0, exp: 0 }
-  ]
-}
-
 onMounted(() => {
   loadLocaleData()
-  loadRecentCombatLogs()
 })
 </script>
 

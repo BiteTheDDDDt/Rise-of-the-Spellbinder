@@ -210,7 +210,21 @@ export class Player {
     const oldLevel = this.data.level
     this.data.level += 1
     this.data.experience = 0
-    logSystem.success(`${this.data.name} 升级到等级 ${this.data.level}!`, { oldLevel, newLevel: this.data.level })
+    
+    // 升级时恢复生命值和法力值
+    const healthRes = this.resourceManager.getResource('health')
+    if (healthRes) {
+      healthRes.add(healthRes.max)
+    }
+    const manaTypes: ResourceId[] = ['mana_fire', 'mana_water', 'mana_earth', 'mana_wind']
+    for (const type of manaTypes) {
+      const manaRes = this.resourceManager.getResource(type)
+      if (manaRes) {
+        manaRes.add(manaRes.max)
+      }
+    }
+
+    logSystem.success(`${this.data.name} 升级到等级 ${this.data.level}! 生命值和法力值已恢复。`, { oldLevel, newLevel: this.data.level })
     
     // Track achievement progress
     if (this.data.achievementManager) {
@@ -218,11 +232,20 @@ export class Player {
     }
   }
 
+
   update(deltaSeconds: number) {
     this.data.resourceManager.update(deltaSeconds)
     this.data.spellManager.update(deltaSeconds)
 
+    // 应用被动生命值恢复 (基础 1% 每秒)
+    const healthRes = this.data.resourceManager.getResource('health')
+    if (healthRes && healthRes.value < healthRes.max) {
+      const regenAmount = (healthRes.max * 0.01) * deltaSeconds
+      healthRes.add(regenAmount)
+    }
+
     // 应用职业效果
+
     this.applyClassEffects()
 
     // 应用技能提供的魔力恢复加成

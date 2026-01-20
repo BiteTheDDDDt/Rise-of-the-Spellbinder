@@ -90,5 +90,19 @@
       }
     ],
     "category": "research"
+  },
+  {
+    "id": "rest",
+    "name": "休息",
+    "description": "在旅店或营地休息，恢复生命值",
+    "duration": 5,
+    "rewards": [
+      {
+        "resource": "health",
+        "amount": 20,
+        "randomRange": [15, 25]
+      }
+    ],
+    "category": "recovery"
   }
 ]

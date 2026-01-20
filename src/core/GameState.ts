@@ -7,6 +7,16 @@ import { logSystem } from '../systems/log'
 import type { MonsterData } from '../entities/monster'
 import { definitionsManager } from './Definitions'
 
+export interface CombatHistoryEntry {
+  id: number
+  monster: string
+  result: '胜利' | '失败' | '平局'
+  time: string
+  gold: number
+  exp: number
+  mana?: Record<string, number>
+}
+
 export interface GameStateData {
   gameTime: number
   isPaused: boolean
@@ -15,6 +25,7 @@ export interface GameStateData {
   activityRunner: ActivityRunner
   hasStarted: boolean
   monsters: MonsterData[]
+  combatHistory: CombatHistoryEntry[]
 }
 
 export class GameState {
@@ -37,6 +48,7 @@ export class GameState {
         activityRunner: defaultActivityRunner,
         hasStarted: false,
         monsters: initialData?.monsters || [],
+        combatHistory: [],
         ...initialData
       }) as GameStateData
 
@@ -232,7 +244,15 @@ export class GameState {
 
     for (const event of events) {
       if (shouldEndEarly) {
-        logSystem.info('战斗失败，跳过剩余事件')
+        logSystem.info('战斗失败或生命值过低，跳过剩余事件')
+        break
+      }
+
+      // 检查玩家生命值是否过低
+      const healthRes = player.resourceManager.getResource('health')
+      if (healthRes && healthRes.value <= healthRes.max * 0.1) {
+        logSystem.warning('生命值过低，由于安全原因停止探索')
+        shouldEndEarly = true
         break
       }
 
@@ -263,21 +283,35 @@ export class GameState {
           
           const combatResult = combat.autoExecute(100)
           
+          // 记录战斗日志
+          const historyEntry: any = {
+            id: Date.now() + Math.random(),
+            monster: monster.name,
+            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+            gold: 0,
+            exp: 0,
+            result: combatResult === 'player_won' ? '胜利' : (combatResult === 'enemy_won' ? '失败' : '平局')
+          }
+
           if (combatResult === 'player_won') {
             logSystem.success(`战斗胜利！击败了 ${monster.name}`)
             
             const drops = monster.generateDrops()
             if (drops.gold) {
               totalGold += drops.gold
+              historyEntry.gold = drops.gold
               logSystem.info(`获得 ${drops.gold} 金币`)
             }
             if (drops.experience) {
               totalExp += drops.experience
+              historyEntry.exp = drops.experience
               logSystem.info(`获得 ${drops.experience} 经验值`)
             }
             for (const [key, value] of Object.entries(drops)) {
               if (key.startsWith('mana_')) {
                 totalMana[key] = (totalMana[key] || 0) + (value as number)
+                if (!historyEntry.mana) historyEntry.mana = {}
+                historyEntry.mana[key] = value
                 logSystem.info(`获得 ${value} ${key}`)
               }
             }
@@ -287,6 +321,13 @@ export class GameState {
           } else {
             logSystem.warning('战斗超时，强制结束')
           }
+          
+          // 添加到历史记录
+          this.data.combatHistory.unshift(historyEntry)
+          if (this.data.combatHistory.length > 50) {
+            this.data.combatHistory.pop()
+          }
+          
           break
         }
         
@@ -387,6 +428,7 @@ export class GameState {
     this.data.activityRunner = new ActivityRunner(this.data.player.achievementManager, this.data.player.resourceManager)
     this.data.hasStarted = false
     this.data.monsters = []
+    this.data.combatHistory = []
     this.setupActivityCallbacks()
   }
 

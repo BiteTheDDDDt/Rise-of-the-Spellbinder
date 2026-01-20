@@ -4,6 +4,7 @@ import { Monster, type CombatBuff, type CombatDebuff } from '../entities/monster
 import type { SpellData, SpellEffect } from './spell'
 import type { AchievementManager } from './achievement'
 import type { ResourceId } from './resource'
+import { logSystem } from './log'
 
 export type CombatLogEntry = {
   timestamp: number
@@ -33,6 +34,7 @@ export class CombatSystem {
   achievementManager?: AchievementManager
   turnCount: number
   playerActionPriority: string[] // 法术优先级列表
+  isSimulated: boolean = false
 
   constructor(player: Player, monsters: Monster[], achievementManager?: AchievementManager) {
     this.player = player
@@ -62,6 +64,15 @@ export class CombatSystem {
       target,
       value
     })
+    
+    // 同时发送到全局日志系统（仅限关键信息）
+    if (type === 'victory') {
+      logSystem.success(`战斗胜利：${message}`)
+    } else if (type === 'defeat') {
+      logSystem.error(`战斗失败：${message}`)
+    } else if (type === 'damage' && value && value > 20) {
+      // 暴击或高伤害提醒？暂时不加，避免日志太乱
+    }
   }
 
   getElementMultiplier(attackerElement: string, defenderElement: string): number {
@@ -83,8 +94,9 @@ export class CombatSystem {
 
   calculateDamage(baseDamage: number, attackerElement: string, defenderElement: string, defenderDefense: number): number {
     const elementMultiplier = this.getElementMultiplier(attackerElement, defenderElement)
-    const defenseReduction = defenderDefense * 0.5
-    const damage = Math.max(1, Math.floor((baseDamage * elementMultiplier) - defenseReduction))
+    // 基础伤害计算不再这里减去防御，防御应该在 target.takeDamage 中计算
+    // 否则防御被计算了两次（这里一次，takeDamage里一次）
+    const damage = Math.max(1, Math.floor(baseDamage * elementMultiplier))
     return damage
   }
 
@@ -115,15 +127,30 @@ export class CombatSystem {
 
   selectPlayerAction(): SpellData | null {
     const learnedSpells = this.player.spellManager.getLearnedSpells()
+    
+    // 调试日志：检查所有已学习法术
+    if (!this.isSimulated && learnedSpells.length > 0) {
+      console.log(`[Combat] ${this.player.name} knows spells:`, learnedSpells.map(s => s.name))
+    }
+
     const availableSpells = learnedSpells.filter(spell => {
       const manaCost = spell.data.manaCost
       const element = spell.data.element
       const manaKey = `mana_${element}`
       const manaRes = this.player.resourceManager.getResource(manaKey as ResourceId)
-      return manaRes && manaRes.value >= manaCost && spell.currentCooldown <= 0
+      
+      const hasMana = manaRes && manaRes.value >= manaCost
+      const notOnCooldown = spell.currentCooldown <= 0
+      
+      return hasMana && notOnCooldown
     })
 
     if (availableSpells.length === 0) {
+      if (!this.isSimulated && learnedSpells.length > 0) {
+        const firstSpell = learnedSpells[0]
+        const res = this.player.resourceManager.getResource(`mana_${firstSpell.data.element}` as ResourceId)
+        console.log(`[Combat] No spells available. Example: ${firstSpell.name} (Cost: ${firstSpell.data.manaCost}, Mana: ${res?.value}, CD: ${firstSpell.currentCooldown})`)
+      }
       return null
     }
 
@@ -144,7 +171,12 @@ export class CombatSystem {
 
     const action = this.selectPlayerAction()
     if (!action) {
-      this.addLog(`${this.player.name} 没有可用法术，跳过回合`, 'info', this.player.name)
+      if (!this.isSimulated) {
+        this.addLog(`${this.player.name} 没有可用法术，跳过回合`, 'info', this.player.name)
+      } else {
+        // 模拟模式下也记录，但标记为调试
+        // console.log(`[Combat] ${this.player.name} skipped turn: no spells available.`)
+      }
       this.endPlayerTurn()
       return
     }
@@ -156,13 +188,30 @@ export class CombatSystem {
     }
 
     // 消耗法力
-    const manaKey = `mana_${action.element}`
+    const element = action.element
+    const manaKey = `mana_${element}`
     const manaRes = this.player.resourceManager.getResource(manaKey as ResourceId)
+    
+    // 如果法力不足（在 selectPlayerAction 之后由于某种原因减少了），再次检查
+    if (!manaRes || manaRes.value < action.manaCost) {
+      if (!this.isSimulated) {
+        this.addLog(`${this.player.name} 法力不足，无法施放 ${action.name}`, 'info', this.player.name)
+      }
+      this.endPlayerTurn()
+      return
+    }
+
     if (manaRes) {
       manaRes.consume(action.manaCost)
     }
 
     this.addLog(`${this.player.name} 施放 ${action.name}`, 'info', this.player.name)
+
+    // 更新法术在 spellManager 中的状态（进入冷却）
+    const spell = this.player.spellManager.getSpell(action.id)
+    if (spell) {
+      spell.cast()
+    }
 
     for (const effect of action.effects) {
       this.applyEffect(effect, this.player, targetMonster, action.element)
@@ -251,14 +300,21 @@ export class CombatSystem {
       const damage = this.calculateDamage(baseDamage, monster.element, 'neutral', 0)
       const healthRes = this.player.resourceManager.getResource('health')
       if (healthRes) {
-        healthRes.data.value = Math.max(0, healthRes.value - damage)
+        // 玩家暂时没有防御力属性在 Player 类中直接体现，这里假设防御为 0 或未来从 getTotalStats 获取
+        const playerStats = this.player.getTotalStats ? this.player.getTotalStats() : { damageReduction: 0 }
+        const defense = playerStats.damageReduction || 0
+        const actualDamage = Math.max(1, Math.floor(damage - defense))
+        
+        healthRes.data.value = Math.max(0, healthRes.value - actualDamage)
+        
         this.addLog(
-          `${monster.name} 攻击 ${this.player.name}，造成 ${damage} 点伤害`,
+          `${monster.name} 攻击 ${this.player.name}，造成 ${actualDamage} 点伤害`,
           'damage',
           monster.name,
           this.player.name,
-          damage
+          actualDamage
         )
+
 
         if (healthRes.value <= 0) {
           this.addLog(`${this.player.name} 被击败了！`, 'info', monster.name, this.player.name)
@@ -277,7 +333,11 @@ export class CombatSystem {
     this.currentTurn = 'monster'
     this.turnCount++
     this.updateMonsterBuffsDebuffs()
-    setTimeout(() => this.executeMonsterTurn(), 500)
+    if (this.isSimulated) {
+      this.executeMonsterTurn()
+    } else {
+      setTimeout(() => this.executeMonsterTurn(), 500)
+    }
   }
 
   endMonsterTurn() {
@@ -291,7 +351,11 @@ export class CombatSystem {
     }
 
     this.currentTurn = 'player'
-    setTimeout(() => this.executePlayerTurn(), 500)
+    if (this.isSimulated) {
+      this.executePlayerTurn()
+    } else {
+      setTimeout(() => this.executePlayerTurn(), 500)
+    }
   }
 
   updateMonsterBuffsDebuffs() {
@@ -386,7 +450,28 @@ export class CombatSystem {
   }
 
   autoExecute(maxRounds: number = 100): 'player_won' | 'enemy_won' | 'draw' {
+    this.isSimulated = true
     let round = 0
+
+    // 检查玩家是否由于某些原因以 0 HP 进入战斗
+    const healthRes = this.player.resourceManager.getResource('health')
+    if (healthRes && healthRes.value <= 0) {
+      this.addLog(`${this.player.name} 以 0 生命值进入战斗并立即溃败！`, 'defeat')
+      this.result = 'defeat'
+      this.isActive = false
+      return 'enemy_won'
+    }
+
+    // 在模拟开始前，检查法力值。如果太低，尝试恢复一点（仅用于调试探索时的法力困境）
+    // 基础火花法术通常只需要 5 点法力
+    const manaTypes: ResourceId[] = ['mana_fire', 'mana_water', 'mana_earth', 'mana_wind']
+    const hasAnyMana = manaTypes.some(t => (this.player.resourceManager.getResource(t)?.value || 0) >= 5)
+    
+    if (!hasAnyMana) {
+      // 记录一个提示，法力不足可能是跳过回合的主要原因
+      this.addLog(`${this.player.name} 法力匮乏，可能无法施展法术。`, 'info')
+    }
+
     while (this.isActive && round < maxRounds) {
       round++
       
@@ -395,6 +480,9 @@ export class CombatSystem {
       } else {
         this.executeMonsterTurn()
       }
+      
+      // 在模拟执行中更新法术冷却
+      this.player.spellManager.update(1) // 假设每回合1秒
       
       if (!this.isActive) {
         break

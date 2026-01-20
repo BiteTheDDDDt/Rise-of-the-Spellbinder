@@ -119,7 +119,8 @@ export class Monster {
   }
 
   takeDamage(damage: number): number {
-    const actualDamage = Math.max(1, damage - this.defense)
+    const defense = this.defense
+    const actualDamage = Math.max(1, Math.floor(damage - defense))
     this.currentHealth -= actualDamage
     if (this.currentHealth <= 0) {
       this.currentHealth = 0
